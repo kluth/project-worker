@@ -1,5 +1,5 @@
 import type { ProjectProvider } from './types.js';
-import type { Task, CreateTaskInput, TaskFilter } from '../types.js';
+import type { Task, CreateTaskInput, UpdateTaskInput, TaskFilter } from '../types.js';
 import type { ConfigManager } from '../config.js';
 
 interface AzureConfig {
@@ -55,19 +55,19 @@ export class AzureDevOpsProvider implements ProjectProvider {
     if (
       !providerConfig ||
       !providerConfig.credentials?.token ||
-      !providerConfig.settings?.organization ||
-      !providerConfig.settings?.project
+      typeof providerConfig.settings?.organization !== 'string' ||
+      typeof providerConfig.settings?.project !== 'string'
     ) {
       throw new Error(
-        'Azure DevOps not configured. Required: credentials.token, settings.organization, settings.project',
+        'Azure DevOps not configured. Required: credentials.token, settings.organization (string), settings.project (string)',
       );
     }
     this.config = {
       token: providerConfig.credentials.token,
-      organization: providerConfig.settings.organization,
-      project: providerConfig.settings.project,
+      organization: providerConfig.settings.organization as string,
+      project: providerConfig.settings.project as string,
     };
-    this.baseUrl = `https://dev.azure.com/${this.config.organization}/${this.config.project}/_apis/wit`;
+    this.baseUrl = `https://dev.azure.com/${this.config!.organization}/${this.config!.project}/_apis/wit`;
   }
 
   async getTasks(_filter: TaskFilter): Promise<Task[]> {

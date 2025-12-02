@@ -42,13 +42,13 @@ const { mockIssues, mockPaginate, MockOctokit } = vi.hoisted(() => {
   };
 
   // Mock the Octokit class constructor
-  const MockOctokit = vi.fn(function () { // Use a regular function for a mock constructor
+  const MockOctokit = vi.fn(function () {
+    // Use a regular function for a mock constructor
     return mockOctokitInstance;
   });
 
   return { mockIssues, mockPaginate, MockOctokit };
 });
-
 
 vi.mock('@octokit/rest', () => ({
   Octokit: MockOctokit,
@@ -195,7 +195,6 @@ describe('Providers (TDD)', () => {
         data: [{ gid: 'task1', name: 'Asana Task', notes: 'Desc', completed: false }],
       };
 
-<<<<<<< HEAD
       (global.fetch as vi.Mock).mockResolvedValue({ ok: true, json: async () => mockResponse });
 
       const provider = new AsanaProvider(mockConfig);
@@ -213,7 +212,7 @@ describe('Providers (TDD)', () => {
     });
   });
 
-  describe.skip('GitHubProvider', () => {
+  describe('GitHubProvider', () => {
     // Temporarily disabled due to persistent Vitest mocking issues with Octokit.paginate.
     // This should be re-enabled and fixed in a dedicated issue (e.g., #GH_MOCK_FIX).
     beforeEach(() => {
@@ -246,11 +245,7 @@ describe('Providers (TDD)', () => {
         },
       ];
 
-<<<<<<< HEAD
       mockPaginate.mockResolvedValue(mockResponse); // Use mockPaginate directly
-=======
-      mockPaginate.mockResolvedValue(mockResponse);
->>>>>>> origin/feat/issue-5-agile-config
 
       const provider = new GitHubProvider(mockConfig);
       const tasks = await provider.getTasks();
@@ -259,21 +254,18 @@ describe('Providers (TDD)', () => {
       expect(tasks[0].id).toBe('1');
       expect(tasks[0].title).toBe('GitHub Issue');
       expect(tasks[0].assignee).toBe('octocat');
-      expect(mockPaginate).toHaveBeenCalledWith( // Expect paginate to be called
+      expect(mockPaginate).toHaveBeenCalledWith(
+        // Expect paginate to be called
         mockIssues.listForRepo, // Use mockIssues.listForRepo directly
         {
           owner: 'octocat',
           repo: 'hello-world',
           state: 'open',
-          per_page: 100 // Add per_page expectation
-        }
+          per_page: 100, // Add per_page expectation
+        },
       );
-      expect(MockOctokit).toHaveBeenCalledWith({ auth: 'ghp_token' }); // Expect the constructor to be called=======
-          per_page: 100
-        }
-      );
+      expect(MockOctokit).toHaveBeenCalledWith({ auth: 'ghp_token' }); // Expect the constructor to be called
     });
->>>>>>> origin/feat/issue-5-agile-config
 
     it('should create a task', async () => {
       mockConfig.getProviderConfig.mockResolvedValue({

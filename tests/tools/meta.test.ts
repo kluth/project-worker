@@ -42,10 +42,16 @@ vi.mock('../../src/services/providerFactory.js', async (importOriginal) => {
 });
 
 // Mock Child Process
-const mockExec = vi.fn(
-  (cmd: string, cb: (error: Error | null, stdout: string, stderr: string) => void) =>
-    mockExec(cmd, cb),
-);
+const { mockExec } = vi.hoisted(() => {
+  return {
+    mockExec: vi.fn(
+      (_cmd: string, cb: (error: Error | null, stdout: string, stderr: string) => void) => {
+        cb(null, 'mock git output', '');
+      },
+    ),
+  };
+});
+
 vi.mock('child_process', () => ({
   exec: mockExec,
 }));

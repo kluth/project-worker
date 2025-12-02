@@ -2,10 +2,37 @@
  * Shared type definitions for the Project Worker extension.
  */
 
-<<<<<<< HEAD
-export type TaskStatus = 'todo' | 'in-progress' | 'blocked' | 'review' | 'done' | 'new' | 'active' | 'closed' | 'backlog' | 'ready for dev' | 'in progress' | 'qa' | 'to do' | 'doing' | 'completed' | string; 
+export type TaskStatus =
+  | 'todo'
+  | 'in-progress'
+  | 'blocked'
+  | 'review'
+  | 'done'
+  | 'new'
+  | 'active'
+  | 'closed'
+  | 'backlog'
+  | 'ready for dev'
+  | 'in progress'
+  | 'qa'
+  | 'to do'
+  | 'doing'
+  | 'completed'
+  | string;
 export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent' | string; // Added string for flexibility
-export type TaskType = 'epic' | 'story' | 'task' | 'subtask' | 'bug' | 'item' | 'feature' | 'initiative' | 'spike' | 'request' | 'change' | string;
+export type TaskType =
+  | 'epic'
+  | 'story'
+  | 'task'
+  | 'subtask'
+  | 'bug'
+  | 'item'
+  | 'feature'
+  | 'initiative'
+  | 'spike'
+  | 'request'
+  | 'change'
+  | string;
 
 export interface Comment {
   id: string;
@@ -146,6 +173,7 @@ export interface CreateTaskInput {
   parentId?: string;
   releaseId?: string;
   estimatedHours?: number;
+  source?: string;
 }
 
 export interface UpdateTaskInput {
@@ -164,6 +192,7 @@ export interface UpdateTaskInput {
   releaseId?: string;
   estimatedHours?: number;
   actualHours?: number;
+  source?: string;
 }
 
 export interface TaskFilter {

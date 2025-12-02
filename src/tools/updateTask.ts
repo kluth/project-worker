@@ -1,8 +1,8 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { ProviderFactory } from '../services/providerFactory.js';
 import { AuditService } from '../services/auditService.js';
-import { UpdateTaskInput, Task } from '../types.js';
+import type { UpdateTaskInput, Task } from '../types.js';
 
 export function registerUpdateTask(server: McpServer): void {
   server.registerTool(
@@ -13,11 +13,41 @@ export function registerUpdateTask(server: McpServer): void {
         id: z.string().describe('The ID of the task to update'),
         title: z.string().optional(),
         description: z.string().optional(),
-<<<<<<< HEAD
-        status: z.enum(['todo', 'in-progress', 'blocked', 'review', 'done', 'new', 'active', 'closed', 'backlog', 'ready for dev', 'in progress', 'qa', 'to do', 'doing', 'completed']).optional(),
+        status: z
+          .enum([
+            'todo',
+            'in-progress',
+            'blocked',
+            'review',
+            'done',
+            'new',
+            'active',
+            'closed',
+            'backlog',
+            'ready for dev',
+            'in progress',
+            'qa',
+            'to do',
+            'doing',
+            'completed',
+          ])
+          .optional(),
         priority: z.enum(['low', 'medium', 'high', 'urgent']).optional(),
-        type: z.enum(['epic', 'story', 'task', 'subtask', 'bug', 'item', 'feature', 'initiative', 'spike', 'request', 'change']).optional(),
-        assignee: z.string().optional(),
+        type: z
+          .enum([
+            'epic',
+            'story',
+            'task',
+            'subtask',
+            'bug',
+            'item',
+            'feature',
+            'initiative',
+            'spike',
+            'request',
+            'change',
+          ])
+          .optional(),
         tags: z.array(z.string()).optional(),
         dueDate: z.string().optional(),
         sprintId: z.string().optional(),
@@ -38,7 +68,11 @@ export function registerUpdateTask(server: McpServer): void {
         if (oldTask) {
           // Audit logging
           for (const key in input) {
-            if (Object.prototype.hasOwnProperty.call(input, key) && key !== 'id' && key !== 'source') {
+            if (
+              Object.prototype.hasOwnProperty.call(input, key) &&
+              key !== 'id' &&
+              key !== 'source'
+            ) {
               const typedKey = key as keyof UpdateTaskInput;
               const oldValue = oldTask[typedKey as keyof Task];
               const newValue = input[typedKey];

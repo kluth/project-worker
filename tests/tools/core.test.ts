@@ -62,7 +62,7 @@ describe('Core Tools', () => {
       checklists: [],
       customFields: {},
       blockedBy: [],
-      gitBranch: undefined
+      gitBranch: undefined,
     });
   });
 
@@ -135,7 +135,9 @@ describe('Core Tools', () => {
       const result = await handler({ id: '1', title: 'Updated', source: 'local' });
 
       expect(ProviderFactory.getProvider).toHaveBeenCalledWith('local');
-      expect(mockProvider.updateTask).toHaveBeenCalledWith(expect.objectContaining({ id: '1', title: 'Updated' }));
+      expect(mockProvider.updateTask).toHaveBeenCalledWith(
+        expect.objectContaining({ id: '1', title: 'Updated' }),
+      );
       expect(JSON.parse(result.content[0].text).title).toBe('Updated');
     });
   });
@@ -165,7 +167,9 @@ describe('Core Tools', () => {
       )[2];
 
       // search_tasks still uses db.getTasks directly because it's a local-only capability currently
-      (db.getTasks as vi.Mock).mockResolvedValue([{ id: '1', title: 'Search Result', description: '', tags: [], comments: [] } as Task]);
+      (db.getTasks as vi.Mock).mockResolvedValue([
+        { id: '1', title: 'Search Result', description: '', tags: [], comments: [] } as Task,
+      ]);
 
       const result = await handler({ query: 'Search' });
 

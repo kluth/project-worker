@@ -1,4 +1,4 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { configManager } from '../config.js';
 
@@ -8,18 +8,24 @@ export function registerEndSprint(server: McpServer) {
     {
       description: 'Ends the currently active sprint.',
       inputSchema: z.object({
-        moveUncompletedToBacklog: z.boolean().default(true).describe('Whether to move uncompleted tasks to the backlog. (Not yet implemented)')
+        moveUncompletedToBacklog: z
+          .boolean()
+          .default(true)
+          .describe('Whether to move uncompleted tasks to the backlog. (Not yet implemented)'),
       }).shape,
     },
     async ({ moveUncompletedToBacklog }) => {
       const config = await configManager.get();
-      const activeSprintIndex = config.sprints.findIndex(s => s.status === 'active');
+      const activeSprintIndex = config.sprints.findIndex((s) => s.status === 'active');
 
       if (activeSprintIndex === -1) {
-        return { isError: true, content: [{ type: 'text', text: 'No active sprint found to end.' }] };
+        return {
+          isError: true,
+          content: [{ type: 'text', text: 'No active sprint found to end.' }],
+        };
       }
 
-      const activeSprint = config.sprints[activeSprintIndex];
+      const activeSprint = config.sprints[activeSprintIndex]!;
       activeSprint.status = 'completed';
       activeSprint.endDate = new Date().toISOString(); // Set actual end date
 
@@ -35,9 +41,9 @@ export function registerEndSprint(server: McpServer) {
         content: [
           {
             type: 'text',
-            text: `Sprint "${activeSprint.name}" successfully ended.`
-          }
-        ]
+            text: `Sprint "${activeSprint!.name}" successfully ended.`,
+          },
+        ],
       };
     },
   );
