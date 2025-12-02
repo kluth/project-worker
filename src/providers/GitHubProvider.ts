@@ -49,17 +49,16 @@ export class GitHubProvider implements ProjectProvider {
     await this.init();
     
     const state = filter?.status === 'done' ? 'closed' : 'open';
-    // GitHub API allows filtering by state, assignee, etc.
     
-    const response = await this.octokit!.rest.issues.listForRepo({
+    const issues = await this.octokit!.paginate(this.octokit!.rest.issues.listForRepo, {
       owner: this.owner,
       repo: this.repo,
       state: state as any,
       assignee: filter?.assignee || undefined,
-      // Simple search support via labels or string matching would be done locally or via search API
+      per_page: 100
     });
 
-    return response.data.map(this.toTask);
+    return issues.map(this.toTask);
   }
 
   async getTaskById(id: string): Promise<Task | undefined> {
