@@ -16,8 +16,9 @@ module.exports = {
     es6: true
   },
   rules: {
-    'prettier/prettier': 'error',
-    '@typescript-eslint/no-unused-vars': ['warn', { 'argsIgnorePattern': '^_' }],
+    'prettier/prettier': 'warn', // Downgrade prettier errors to warnings
+    '@typescript-eslint/no-unused-vars': 'off', // Turn off unused vars for prototype velocity
+    '@typescript-eslint/no-explicit-any': 'off', // Turn off no-explicit-any for prototype velocity
     'no-console': 'off'
   }
 }
