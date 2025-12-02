@@ -54,8 +54,9 @@ Built as a Gemini CLI extension, the Project Worker is designed to be:
     npm install
     npm run build
     ```
-2.  **Configuration**: Use the built-in `manage_connections` tool to configure your providers (e.g., GitHub token, Jira domain, Monday.com board ID).
-    *   Example: `manage_connections configure --provider github --credentials.token <YOUR_TOKEN> --settings.repo <OWNER/REPO>`
+2.  **Configuration**: Use the built-in `manage_connections` tool to configure your providers.
+    *   **[👉 Click here for detailed setup guides for GitHub, Jira, Trello, and more!](docs/providers/index.md)**
+    *   Quick Example: `manage_connections action=configure provider=github credentials={"token":"<YOUR_TOKEN>"} settings={"repo":"<OWNER/REPO>"}`
 3.  **Activate**: Set your active provider: `manage_connections set_active --provider jira`
 4.  **Start Working!**: Use commands like `create_task`, `get_tasks`, `update_task` – your unified project experience awaits!
 
