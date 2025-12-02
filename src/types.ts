@@ -2,18 +2,10 @@
  * Shared type definitions for the Project Worker extension.
  */
 
-export type TaskStatus =
-  | 'todo'
-  | 'in-progress'
-  | 'blocked'
-  | 'review'
-  | 'done'
-  | 'new'
-  | 'active'
-  | 'closed'
-  | string; // Added string to allow loose mapping from providers
+<<<<<<< HEAD
+export type TaskStatus = 'todo' | 'in-progress' | 'blocked' | 'review' | 'done' | 'new' | 'active' | 'closed' | 'backlog' | 'ready for dev' | 'in progress' | 'qa' | 'to do' | 'doing' | 'completed' | string; 
 export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent' | string; // Added string for flexibility
-export type TaskType = 'epic' | 'story' | 'task' | 'subtask' | 'bug' | 'item' | 'feature' | string; // Added 'item' for Monday, 'feature' for Azure
+export type TaskType = 'epic' | 'story' | 'task' | 'subtask' | 'bug' | 'item' | 'feature' | 'initiative' | 'spike' | 'request' | 'change' | string;
 
 export interface Comment {
   id: string;

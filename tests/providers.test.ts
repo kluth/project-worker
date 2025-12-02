@@ -24,7 +24,6 @@ const { mockFetch } = vi.hoisted(() => {
 });
 global.fetch = mockFetch;
 
-<<<<<<< HEAD
 const { mockIssues, mockPaginate, MockOctokit } = vi.hoisted(() => {
   const mockIssues: Partial<Octokit['rest']['issues']> = {
     listForRepo: vi.fn(),
@@ -52,10 +51,8 @@ const { mockIssues, mockPaginate, MockOctokit } = vi.hoisted(() => {
 
 
 vi.mock('@octokit/rest', () => ({
-<<<<<<< HEAD
   Octokit: MockOctokit,
 }));
-
 describe('Providers (TDD)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -219,6 +216,7 @@ describe('Providers (TDD)', () => {
       mockIssues.update.mockClear();
       mockIssues.createComment.mockClear();
       mockPaginate.mockClear(); // Clear paginate mock
+    });
 
     it('should fetch and map tasks correctly', async () => {
       mockConfig.getProviderConfig.mockResolvedValue({
@@ -259,6 +257,7 @@ describe('Providers (TDD)', () => {
         }
       );
       expect(MockOctokit).toHaveBeenCalledWith({ auth: 'ghp_token' }); // Expect the constructor to be called
+>>>>>>> feat/issue-9-refactor-statuses
 
     it('should create a task', async () => {
       mockConfig.getProviderConfig.mockResolvedValue({

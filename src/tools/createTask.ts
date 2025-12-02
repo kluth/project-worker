@@ -12,9 +12,9 @@ export function registerCreateTask(server: McpServer): void {
       inputSchema: z.object({
         title: z.string().describe('The title of the task'),
         description: z.string().default('').describe('Detailed description'),
-        status: z.enum(['todo', 'in-progress', 'blocked', 'review', 'done']).default('todo'),
+        status: z.enum(['todo', 'in-progress', 'blocked', 'review', 'done', 'new', 'active', 'closed', 'backlog', 'ready for dev', 'in progress', 'qa', 'to do', 'doing', 'completed']).default('todo'),
         priority: z.enum(['low', 'medium', 'high', 'urgent']).default('medium'),
-        type: z.enum(['epic', 'story', 'task', 'subtask', 'bug']).default('task'),
+        type: z.enum(['epic', 'story', 'task', 'subtask', 'bug', 'item', 'feature', 'initiative', 'spike', 'request', 'change']).default('task'),
         assignee: z.string().optional(),
         tags: z.array(z.string()).default([]),
         source: z.enum(['local', 'github', 'jira']).optional().describe('Override active provider'),
