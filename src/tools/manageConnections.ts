@@ -9,7 +9,7 @@ export function registerManageConnections(server: McpServer) {
       description: 'Configure external tool integrations (GitHub, Jira, Trello, Asana).',
       inputSchema: z.object({
         action: z.enum(['set_active', 'configure', 'list']).describe('Action to perform'),
-        provider: z.enum(['local', 'github', 'jira', 'trello', 'asana']).optional(),
+        provider: z.enum(['local', 'github', 'jira', 'trello', 'asana', 'monday', 'azure-devops']).optional(),
         credentials: z.record(z.string()).optional().describe('Jira: email, token; Trello: key, token; Asana: token'),
         settings: z.record(z.string()).optional().describe('Jira: domain, projectKey; Trello: boardId; Asana: projectId'),
       }).shape,
