@@ -87,6 +87,20 @@ export interface Discussion {
   updatedAt: string;
 }
 
+export interface Event {
+  id: string;
+  type: 'planning' | 'review' | 'stand-up' | 'retrospective' | 'demo' | 'other' | string;
+  name: string;
+  description?: string;
+  startTime: string; // ISOString
+  endTime: string; // ISOString
+  attendees?: string[]; // List of assignee IDs or names
+  relatedSprintId?: string;
+  relatedTaskId?: string;
+  location?: string;
+  notificationSent?: boolean;
+}
+
 export interface Task {
   id: string;
   title: string;

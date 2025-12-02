@@ -56,6 +56,12 @@ registerManageDependencies(server);
 registerManageSprints(server);
 registerGitTools(server);
 
+// Event Management (New Tools)
+import { registerScheduleEvent } from './tools/scheduleEvent.js';
+import { registerGetEvents } from './tools/getEvents.js';
+registerScheduleEvent(server);
+registerGetEvents(server);
+
 // Enterprise Features
 registerManageReleases(server);
 registerLogWork(server);

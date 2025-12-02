@@ -1,6 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import os from 'os';
+import { Sprint, TaskStatus, Event } from './types.js'; // Import Sprint, TaskStatus, and Event types
 
 const CONFIG_DIR = path.join(os.homedir(), '.gemini-project-worker');
 const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json');
@@ -14,10 +15,35 @@ export interface ProviderConfig {
 
 export interface AgileMethodologyConfig {
   type: 'scrum' | 'kanban' | 'waterfall' | 'lean' | 'prince2' | 'custom';
-  settings?: Record<string, unknown>; // Changed 'any' to 'unknown'
+<<<<<<< HEAD
+  settings?: Record<string, unknown>;
 }
 
-// ... other interfaces ...
+export interface KanbanBoardConfig {
+  boardName: string; // e.g., "Default Kanban Board"
+  wipLimits: Record<TaskStatus, number>; // e.g., { 'in progress': 3, 'review': 2 }
+}
+
+export interface AppConfig {
+  activeProvider: 'local' | 'github' | 'jira' | 'trello' | 'asana' | 'azure-devops' | 'monday';
+  providers: ProviderConfig[];
+  agileMethodology: AgileMethodologyConfig;
+  sprints: Sprint[]; // From Issue #6
+  kanbanBoards: KanbanBoardConfig[]; // From Issue #7
+  events: Event[]; // New for Issue #8
+}
+
+const DEFAULT_CONFIG: AppConfig = {
+  activeProvider: 'local',
+  providers: [],
+  agileMethodology: { // Default agile methodology configuration
+    type: 'scrum',
+    settings: {}
+  },
+  sprints: [], // Default for sprints
+  kanbanBoards: [], // Default for kanban boards
+  events: [], // Default for events
+};
 
 export class ConfigManager {
   private config: AppConfig | null = null;
@@ -31,6 +57,7 @@ export class ConfigManager {
     try {
       this.config = JSON.parse(content);
       // Ensure new fields are initialized for existing configs
+<<<<<<< HEAD
       this.config.agileMethodology =
         this.config.agileMethodology || DEFAULT_CONFIG.agileMethodology;
       this.config.sprints = this.config.sprints || DEFAULT_CONFIG.sprints;
