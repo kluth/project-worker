@@ -3,7 +3,6 @@ import { z } from 'zod';
 import { configManager } from '../config.js';
 
 export function registerManageConnections(server: McpServer): void {
-  // Add void return type
   server.registerTool(
     'manage_connections',
     {
@@ -12,7 +11,7 @@ export function registerManageConnections(server: McpServer): void {
         action: z.enum(['set_active', 'configure', 'list']).describe('Action to perform'),
         provider: z
           .enum(['local', 'github', 'jira', 'trello', 'asana', 'monday', 'azure-devops'])
-          .optional(), // Updated enum
+          .optional(),
         credentials: z
           .record(z.string())
           .optional()
@@ -48,7 +47,6 @@ export function registerManageConnections(server: McpServer): void {
       if (action === 'set_active') {
         if (!provider)
           return { isError: true, content: [{ type: 'text', text: 'Provider required' }] };
-        // provider is already typed by z.enum, so 'as any' is not needed
         await configManager.setActiveProvider(provider);
         return { content: [{ type: 'text', text: `Active provider set to ${provider}` }] };
       }
@@ -61,7 +59,6 @@ export function registerManageConnections(server: McpServer): void {
           };
 
         await configManager.setProviderConfig({
-          // provider is already typed by z.enum, so 'as any' is not needed
           provider: provider,
           enabled: true,
           credentials,

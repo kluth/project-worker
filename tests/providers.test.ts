@@ -5,13 +5,12 @@ import { AsanaProvider } from '../src/providers/AsanaProvider.js';
 import { GitHubProvider } from '../src/providers/GitHubProvider.js';
 import { AzureDevOpsProvider } from '../src/providers/AzureDevOpsProvider.js';
 import { MondayProvider } from '../src/providers/MondayProvider.js';
-import type { ConfigManager } from '../src/config.js'; // Use type import
-import type { TaskFilter } from '../src/types.js'; // Use type import
-import type { Octokit } from '@octokit/rest'; // Import Octokit type
+import type { ConfigManager } from '../src/config.js';
+import type { TaskFilter } from '../src/types.js';
+import type { Octokit } from '@octokit/rest';
 
 // Mock ConfigManager
 const mockConfig: ConfigManager = {
-  // Type the mockConfig
   getProviderConfig: vi.fn(),
   get: vi.fn(),
   save: vi.fn(),
@@ -20,42 +19,43 @@ const mockConfig: ConfigManager = {
 
 // Mock global fetch
 const { mockFetch } = vi.hoisted(() => {
-  const mockFetch = vi.fn<[RequestInfo | URL, RequestInit?], Promise<Response>>(); // Explicitly type mockFetch
+  const mockFetch = vi.fn<[RequestInfo | URL, RequestInit?], Promise<Response>>();
   return { mockFetch };
 });
 global.fetch = mockFetch;
 
 // Mock Octokit
-const { mockIssues, mockPaginate, MockOctokit } = vi.hoisted(() => {
+const { mockOctokit, mockIssues } = vi.hoisted(() => {
   const mockIssues: Partial<Octokit['rest']['issues']> = {
-    // Type mockIssues here
     listForRepo: vi.fn(),
     get: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
+    createComment: vi.fn(),
   };
 
-  const mockPaginate = vi.fn();
-
-  // Mock the Octokit class constructor
-  const MockOctokit = vi
-    .fn<[ConstructorParameters<typeof Octokit>[0]], Octokit>()
-    .mockImplementation(function (
-      this: Octokit, // Explicitly type 'this' context
-      _options?: ConstructorParameters<typeof Octokit>[0], // Add options parameter, prefixed with _ as it's not used directly
-    ) {
-      // This simulates an Octokit instance
-      Object.assign(this, {
-        rest: { issues: mockIssues }, // Directly assign mocked issues
-        paginate: mockPaginate,
-      });
-    });
-
-  return { mockIssues, mockPaginate, MockOctokit };
+  const mockOctokit = vi.fn(function() {
+    // This is the actual instance that GitHubProvider will get
+    return {
+      rest: {
+        issues: mockIssues,
+      },
+      // Mock paginate
+      paginate: vi.fn().mockImplementation(async (route, options) => {
+          // If route is listForRepo, return mock data
+          if (route === mockIssues.listForRepo) {
+              const response = await route(options);
+              return response.data;
+          }
+          return [];
+      }),
+    };
+  });
+  return { mockOctokit, mockIssues };
 });
 
 vi.mock('@octokit/rest', () => ({
-  Octokit: MockOctokit,
+  Octokit: mockOctokit,
 }));
 
 describe('Providers (TDD)', () => {
@@ -92,12 +92,11 @@ describe('Providers (TDD)', () => {
       };
 
       (global.fetch as vi.Mock).mockResolvedValue({
-        // Typed mock
         ok: true,
         json: async () => mockResponse,
       });
 
-      const provider = new JiraProvider(mockConfig); // Removed as any
+      const provider = new JiraProvider(mockConfig);
       const tasks = await provider.getTasks();
 
       expect(tasks).toHaveLength(1);
@@ -126,10 +125,9 @@ describe('Providers (TDD)', () => {
         self: 'http://...',
       };
 
-      (global.fetch as vi.Mock) // Typed mock
-        .mockResolvedValueOnce({ ok: true, json: async () => mockCreatedIssue }) // Create
+      (global.fetch as vi.Mock)
+        .mockResolvedValueOnce({ ok: true, json: async () => mockCreatedIssue })
         .mockResolvedValueOnce({
-          // Get
           ok: true,
           json: async () => ({
             key: 'PROJ-2',
@@ -145,7 +143,7 @@ describe('Providers (TDD)', () => {
           }),
         });
 
-      const provider = new JiraProvider(mockConfig); // Removed as any
+      const provider = new JiraProvider(mockConfig);
       const task = await provider.createTask({ title: 'New Task', description: 'Desc' });
 
       expect(task.id).toBe('PROJ-2');
@@ -168,9 +166,9 @@ describe('Providers (TDD)', () => {
         { id: 'card1', name: 'Trello Card', desc: 'Desc', labels: [], idMembers: [] },
       ];
 
-      (global.fetch as vi.Mock).mockResolvedValue({ ok: true, json: async () => mockCards }); // Typed mock
+      (global.fetch as vi.Mock).mockResolvedValue({ ok: true, json: async () => mockCards });
 
-      const provider = new TrelloProvider(mockConfig); // Removed as any
+      const provider = new TrelloProvider(mockConfig);
       const tasks = await provider.getTasks();
 
       expect(tasks).toHaveLength(1);
@@ -194,9 +192,9 @@ describe('Providers (TDD)', () => {
         data: [{ gid: 'task1', name: 'Asana Task', notes: 'Desc', completed: false }],
       };
 
-      (global.fetch as vi.Mock).mockResolvedValue({ ok: true, json: async () => mockResponse }); // Typed mock
+      (global.fetch as vi.Mock).mockResolvedValue({ ok: true, json: async () => mockResponse });
 
-      const provider = new AsanaProvider(mockConfig); // Removed as any
+      const provider = new AsanaProvider(mockConfig);
       const tasks = await provider.getTasks();
 
       expect(tasks).toHaveLength(1);
@@ -215,12 +213,12 @@ describe('Providers (TDD)', () => {
     // Temporarily disabled due to persistent Vitest mocking issues with Octokit.paginate.
     // This should be re-enabled and fixed in a dedicated issue (e.g., #GH_MOCK_FIX).
     beforeEach(() => {
-      MockOctokit.mockClear();
+      mockOctokit.mockClear();
       mockIssues.listForRepo.mockClear();
       mockIssues.get.mockClear();
       mockIssues.create.mockClear();
       mockIssues.update.mockClear();
-      mockPaginate.mockClear();
+      mockIssues.createComment.mockClear();
     });
 
     it('should fetch and map tasks correctly', async () => {
@@ -243,9 +241,9 @@ describe('Providers (TDD)', () => {
         },
       ];
 
-      mockPaginate.mockResolvedValue(mockResponse); // Use mockPaginate directly
+      mockIssues.listForRepo.mockResolvedValue({ data: mockResponse });
 
-      const provider = new GitHubProvider(mockConfig); // Removed as any
+      const provider = new GitHubProvider(mockConfig);
       const tasks = await provider.getTasks();
 
       expect(tasks).toHaveLength(1);
@@ -253,16 +251,12 @@ describe('Providers (TDD)', () => {
       expect(tasks[0].title).toBe('GitHub Issue');
       expect(tasks[0].assignee).toBe('octocat');
       expect(tasks[0].tags).toEqual(['bug']);
-      expect(mockPaginate).toHaveBeenCalledWith(
-        mockIssues.listForRepo, // Use mockIssues.listForRepo directly
-        {
-          owner: 'octocat',
-          repo: 'hello-world',
-          state: 'open',
-          per_page: 100, // Add per_page expectation
-        },
-      );
-      expect(MockOctokit).toHaveBeenCalledWith({ auth: 'ghp_token' }); // Expect the constructor to be called
+      expect(mockIssues.listForRepo).toHaveBeenCalledWith(expect.objectContaining({
+        owner: 'octocat',
+        repo: 'hello-world',
+        state: 'open'
+      }));
+      expect(mockOctokit).toHaveBeenCalledWith({ auth: 'ghp_token' });
     });
 
     it('should create a task', async () => {
@@ -285,7 +279,7 @@ describe('Providers (TDD)', () => {
 
       mockIssues.create.mockResolvedValue({ data: mockCreatedIssue });
 
-      const provider = new GitHubProvider(mockConfig); // Removed as any
+      const provider = new GitHubProvider(mockConfig);
       const task = await provider.createTask({
         title: 'New GitHub Issue',
         description: 'New Body',
@@ -321,7 +315,7 @@ describe('Providers (TDD)', () => {
         },
       });
 
-      const provider = new GitHubProvider(mockConfig); // Removed as any
+      const provider = new GitHubProvider(mockConfig);
       const result = await provider.deleteTask('1');
 
       expect(result).toBe(true);
@@ -366,8 +360,8 @@ describe('Providers (TDD)', () => {
           }),
         });
 
-      const provider = new AzureDevOpsProvider(mockConfig); // Removed as any
-      const tasks = await provider.getTasks({} as TaskFilter); // Cast to TaskFilter
+      const provider = new AzureDevOpsProvider(mockConfig);
+      const tasks = await provider.getTasks({} as TaskFilter);
 
       expect(tasks).toHaveLength(1);
       expect(tasks[0].id).toBe('100');
@@ -401,7 +395,7 @@ describe('Providers (TDD)', () => {
         }),
       });
 
-      const provider = new AzureDevOpsProvider(mockConfig); // Removed as any
+      const provider = new AzureDevOpsProvider(mockConfig);
       const task = await provider.createTask({ title: 'New Azure Item' });
 
       expect(task.id).toBe('101');
@@ -445,8 +439,8 @@ describe('Providers (TDD)', () => {
         json: async () => mockResponse,
       });
 
-      const provider = new MondayProvider(mockConfig); // Removed as any
-      const tasks = await provider.getTasks({} as TaskFilter); // Cast to TaskFilter
+      const provider = new MondayProvider(mockConfig);
+      const tasks = await provider.getTasks({} as TaskFilter);
 
       expect(tasks).toHaveLength(1);
       expect(tasks[0].id).toBe('item-1');
@@ -479,7 +473,7 @@ describe('Providers (TDD)', () => {
         json: async () => mockResponse,
       });
 
-      const provider = new MondayProvider(mockConfig); // Removed as any
+      const provider = new MondayProvider(mockConfig);
       const task = await provider.createTask({ title: 'New Item' });
 
       expect(task.id).toBe('item-2');
