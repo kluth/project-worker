@@ -68,4 +68,22 @@ export class LocalProvider implements ProjectProvider {
   async deleteTask(id: string): Promise<boolean> {
     return db.deleteTask(id);
   }
+
+  async addComment(taskId: string, content: string): Promise<Task> {
+    const task = await db.getTaskById(taskId);
+    if (!task) throw new Error(`Task ${taskId} not found`);
+
+    const newComment = {
+      id: randomUUID(),
+      author: 'LocalUser', // TODO: Configurable user
+      content,
+      timestamp: new Date().toISOString()
+    };
+
+    task.comments.push(newComment);
+    task.updatedAt = new Date().toISOString();
+    await db.updateTask(task);
+    
+    return task;
+  }
 }

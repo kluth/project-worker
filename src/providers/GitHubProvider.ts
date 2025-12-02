@@ -115,4 +115,19 @@ export class GitHubProvider implements ProjectProvider {
     await this.updateTask({ id, status: 'done' });
     return true;
   }
+
+  async addComment(taskId: string, content: string): Promise<Task> {
+    await this.init();
+    await this.octokit!.rest.issues.createComment({
+      owner: this.owner,
+      repo: this.repo,
+      issue_number: parseInt(taskId),
+      body: content
+    });
+    
+    // Return updated task
+    const task = await this.getTaskById(taskId);
+    if (!task) throw new Error(`Failed to retrieve task ${taskId} after adding comment`);
+    return task;
+  }
 }

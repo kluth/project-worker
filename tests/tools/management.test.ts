@@ -6,7 +6,6 @@ import { registerManageReleases } from '../../src/tools/manageReleases.js';
 import { registerManageSprints } from '../../src/tools/manageSprints.js';
 import { registerManageWiki } from '../../src/tools/manageWiki.js';
 import { registerCustomFields } from '../../src/tools/customFields.js';
-import { registerAddComment } from '../../src/tools/addComment.js';
 import { db } from '../../src/db.js';
 
 // Mock DB
@@ -108,18 +107,6 @@ describe('Management Tools', () => {
       (db.getTaskById as any).mockResolvedValue({ id: '1', customFields: {} });
       
       await handler({ taskId: '1', key: 'k', value: 'v' });
-      
-      expect(db.updateTask).toHaveBeenCalled();
-    });
-  });
-
-  describe('add_comment', () => {
-    it('should add comment', async () => {
-      registerAddComment(mockServer as any);
-      const handler = getHandler('add_comment');
-      (db.getTaskById as any).mockResolvedValue({ id: '1', comments: [] });
-      
-      await handler({ taskId: '1', content: 'Comment' });
       
       expect(db.updateTask).toHaveBeenCalled();
     });

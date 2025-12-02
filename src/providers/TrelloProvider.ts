@@ -93,4 +93,8 @@ export class TrelloProvider implements ProjectProvider {
     const res = await fetch(url, { method: 'DELETE' });
     return res.ok;
   }
+
+  async addComment(taskId: string, content: string): Promise<Task> {
+    throw new Error('Not implemented');
+  }
 }

@@ -139,4 +139,8 @@ export class JiraProvider implements ProjectProvider {
     });
     return res.ok;
   }
+
+  async addComment(taskId: string, content: string): Promise<Task> {
+    throw new Error('Not implemented');
+  }
 }

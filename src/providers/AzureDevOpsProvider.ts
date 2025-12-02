@@ -153,4 +153,8 @@ export class AzureDevOpsProvider implements ProjectProvider {
   async deleteTask(id: string): Promise<boolean> {
     throw new Error('Not implemented');
   }
+
+  async addComment(taskId: string, content: string): Promise<Task> {
+    throw new Error('Not implemented');
+  }
 }

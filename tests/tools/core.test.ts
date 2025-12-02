@@ -5,6 +5,7 @@ import { registerGetTasks } from '../../src/tools/getTasks.js';
 import { registerUpdateTask } from '../../src/tools/updateTask.js';
 import { registerDeleteTask } from '../../src/tools/deleteTask.js';
 import { registerSearchTasks } from '../../src/tools/searchTasks.js';
+import { registerAddComment } from '../../src/tools/addComment.js';
 import { ProviderFactory } from '../../src/services/providerFactory.js';
 import { db } from '../../src/db.js';
 
@@ -30,8 +31,9 @@ vi.mock('../../src/db.js', () => ({
 const mockProvider = {
   createTask: vi.fn(),
   getTasks: vi.fn(),
-  updateTask: vi.fn(), // Not used by update_task tool (it uses DB directly)
-  deleteTask: vi.fn(), // Not used by delete_task tool (it uses DB directly)
+  addComment: vi.fn(),
+  updateTask: vi.fn(), 
+  deleteTask: vi.fn(), 
 };
 
 // Mock Server
@@ -74,12 +76,27 @@ describe('Core Tools', () => {
     });
   });
 
+  describe('add_comment', () => {
+    it('should register and call add_comment via provider', async () => {
+      registerAddComment(mockServer as any);
+      const handler = (mockServer.registerTool as any).mock.calls.find((c: any) => c[0] === 'add_comment')[2];
+      
+      mockProvider.addComment.mockResolvedValue({ id: '1', comments: [{ content: 'New Comment' }] });
+      
+      const result = await handler({ taskId: '1', content: 'New Comment', source: 'github' });
+      
+      expect(ProviderFactory.getProvider).toHaveBeenCalledWith('github');
+      expect(mockProvider.addComment).toHaveBeenCalledWith('1', 'New Comment');
+      expect(result.content[0].text).toContain('New Comment');
+    });
+  });
+
   describe('update_task', () => {
     it('should register and call update_task', async () => {
       registerUpdateTask(mockServer as any);
       const handler = (mockServer.registerTool as any).mock.calls.find((c: any) => c[0] === 'update_task')[2];
       
-      // update_task uses db directly, not provider
+      // update_task uses db directly
       (db.getTaskById as any).mockResolvedValue({ id: '1', title: 'Old', tags: [] });
       
       const result = await handler({ id: '1', title: 'Updated' });
