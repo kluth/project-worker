@@ -1,8 +1,8 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { ProviderFactory } from '../services/providerFactory.js';
 
-export function registerGetTasks(server: McpServer) {
+export function registerGetTasks(server: McpServer): void {
   server.registerTool(
     'get_tasks',
     {

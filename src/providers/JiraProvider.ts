@@ -1,6 +1,22 @@
-import { ProjectProvider } from './types.js';
-import { Task, CreateTaskInput, UpdateTaskInput, TaskFilter, TaskType } from '../types.js';
-import { ConfigManager } from '../config.js';
+import type { ProjectProvider } from './types.js';
+import type { Task, CreateTaskInput, UpdateTaskInput, TaskFilter, TaskType } from '../types.js';
+import type { ConfigManager } from '../config.js';
+
+interface JiraIssueResponse {
+  key: string;
+  fields: {
+    summary: string;
+    description: string | null;
+    status: { name: string };
+    priority: { name: string }; // Simplified
+    issuetype: { name: string };
+    assignee: { displayName: string } | null;
+    labels: string[];
+    created: string;
+    updated: string;
+  };
+  // Add other relevant fields if needed
+}
 
 export class JiraProvider implements ProjectProvider {
   name = 'jira';
@@ -25,22 +41,22 @@ export class JiraProvider implements ProjectProvider {
 
   private getHeaders() {
     return {
-      'Authorization': `Basic ${Buffer.from(`${this.email}:${this.token}`).toString('base64')}`,
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
+      Authorization: `Basic ${Buffer.from(`${this.email}:${this.token}`).toString('base64')}`,
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
     };
   }
 
-  private mapIssueToTask(issue: any): Task {
+  private mapIssueToTask(issue: JiraIssueResponse): Task {
     const fields = issue.fields;
     const typeMap: Record<string, TaskType> = {
-      'Story': 'story',
-      'Epic': 'epic',
-      'Bug': 'bug',
-      'Task': 'task',
-      'Sub-task': 'subtask'
+      Story: 'story',
+      Epic: 'epic',
+      Bug: 'bug',
+      Task: 'task',
+      'Sub-task': 'subtask',
     };
-    
+
     return {
       id: issue.key,
       title: fields.summary,
@@ -56,30 +72,30 @@ export class JiraProvider implements ProjectProvider {
       checklists: [],
       customFields: {},
       blockedBy: [],
-      gitBranch: undefined
+      gitBranch: undefined,
     };
   }
 
   async getTasks(filter?: TaskFilter): Promise<Task[]> {
     await this.init();
-    
+
     let jql = 'order by created DESC';
     if (filter?.search) {
-        jql = `text ~ "${filter.search}" ` + jql;
+      jql = `text ~ "${filter.search}" ` + jql;
     }
     // ... handle other filters
 
     const url = `https://${this.domain}/rest/api/3/search?jql=${encodeURIComponent(jql)}`;
-    
+
     const res = await fetch(url, {
       method: 'GET',
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
 
     if (!res.ok) throw new Error(`Jira API error: ${res.statusText}`);
-    
+
     const data = await res.json();
-    return data.issues.map((i: any) => this.mapIssueToTask(i));
+    return data.issues.map((i: JiraIssueResponse) => this.mapIssueToTask(i)); // Fixed 'any'
   }
 
   async getTaskById(id: string): Promise<Task | undefined> {
@@ -101,7 +117,7 @@ export class JiraProvider implements ProjectProvider {
         summary: input.title,
         description: input.description, // Note: Jira v3 needs ADF, v2 uses string. Using simplified for now.
         issuetype: { name: 'Task' }, // Default
-      }
+      },
     };
 
     // Mapping Types
@@ -111,13 +127,13 @@ export class JiraProvider implements ProjectProvider {
 
     const res = await fetch(`https://${this.domain}/rest/api/3/issue`, {
       method: 'POST',
-      headers: this.getHeaders(),
-      body: JSON.stringify(body)
+      headers: { ...this.getHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
     });
 
     if (!res.ok) {
-        const err = await res.text();
-        throw new Error(`Failed to create Jira issue: ${err}`);
+      const err = await res.text();
+      throw new Error(`Failed to create Jira issue: ${err}`);
     }
 
     const data = await res.json();
@@ -127,20 +143,22 @@ export class JiraProvider implements ProjectProvider {
     return newTask;
   }
 
-  async updateTask(input: UpdateTaskInput): Promise<Task> {
-    throw new Error('Jira update not implemented yet'); 
+  async updateTask(_input: UpdateTaskInput): Promise<Task> {
+    // Renamed to _input
+    throw new Error('Jira update not implemented yet');
   }
 
   async deleteTask(id: string): Promise<boolean> {
     await this.init();
     const res = await fetch(`https://${this.domain}/rest/api/3/issue/${id}`, {
       method: 'DELETE',
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return res.ok;
   }
 
-  async addComment(taskId: string, content: string): Promise<Task> {
+  async addComment(_taskId: string, _content: string): Promise<Task> {
+    // Renamed taskId, content
     throw new Error('Not implemented');
   }
 }

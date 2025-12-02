@@ -1,8 +1,8 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { ProviderFactory } from '../services/providerFactory.js';
 
-export function registerAddComment(server: McpServer) {
+export function registerAddComment(server: McpServer): void {
   server.registerTool(
     'add_comment',
     {
@@ -16,10 +16,10 @@ export function registerAddComment(server: McpServer) {
     },
     async ({ taskId, content, source }) => {
       const provider = await ProviderFactory.getProvider(source);
-      
+
       try {
         const updatedTask = await provider.addComment(taskId, content);
-        
+
         // We return the last comment added, or the whole task if simpler.
         // Let's return the last comment for consistency with previous behavior if possible,
         // otherwise the task.
@@ -33,13 +33,17 @@ export function registerAddComment(server: McpServer) {
             },
           ],
         };
-      } catch (error: any) {
+      } catch (error: unknown) {
+        let errorMessage = 'An unknown error occurred.';
+        if (error instanceof Error) {
+          errorMessage = error.message;
+        }
         return {
           isError: true,
           content: [
             {
               type: 'text',
-              text: `Failed to add comment: ${error.message}`,
+              text: `Failed to add comment: ${errorMessage}`,
             },
           ],
         };

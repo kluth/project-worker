@@ -1,9 +1,9 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { db } from '../db.js';
 import { randomUUID } from 'crypto';
 
-export function registerManageChecklists(server: McpServer) {
+export function registerManageChecklists(server: McpServer): void {
   server.registerTool(
     'manage_checklists',
     {
@@ -14,12 +14,16 @@ export function registerManageChecklists(server: McpServer) {
         title: z.string().optional().describe('Checklist title (for add_list)'),
         content: z.string().optional().describe('Item text (for add_item)'),
         itemId: z.string().optional().describe('Item ID (for toggle/remove)'),
-        checklistId: z.string().optional().describe('Checklist ID (optional if task has only one, required for multiple)'),
+        checklistId: z
+          .string()
+          .optional()
+          .describe('Checklist ID (optional if task has only one, required for multiple)'),
       }).shape,
     },
     async ({ action, taskId, title, content, itemId, checklistId }) => {
       const task = await db.getTaskById(taskId);
-      if (!task) return { isError: true, content: [{ type: 'text', text: `Task ${taskId} not found` }] };
+      if (!task)
+        return { isError: true, content: [{ type: 'text', text: `Task ${taskId} not found` }] };
 
       // Ensure checklists array exists
       if (!task.checklists) task.checklists = [];
@@ -29,27 +33,32 @@ export function registerManageChecklists(server: McpServer) {
         task.checklists.push({
           id: randomUUID(),
           title,
-          items: []
+          items: [],
         });
         await db.updateTask(task);
         return { content: [{ type: 'text', text: 'Checklist added' }] };
       }
 
       // Helper to find list
-      let list = checklistId 
-        ? task.checklists.find(c => c.id === checklistId)
+      let list = checklistId
+        ? task.checklists.find((c) => c.id === checklistId)
         : task.checklists[0]; // Default to first list
 
       if (!list) {
-         return { isError: true, content: [{ type: 'text', text: 'No checklist found on this task' }] };
+        return {
+          isError: true,
+          content: [{ type: 'text', text: 'No checklist found on this task' }],
+        };
       }
 
       if (action === 'add_item') {
-        if (!content) return { isError: true, content: [{ type: 'text', text: 'Content required' }] };
-        list!.items.push({
+        if (!content)
+          return { isError: true, content: [{ type: 'text', text: 'Content required' }] };
+        list.items.push({
+          // Removed '!'
           id: randomUUID(),
           text: content,
-          completed: false
+          completed: false,
         });
         await db.updateTask(task);
         return { content: [{ type: 'text', text: 'Item added' }] };
@@ -57,27 +66,28 @@ export function registerManageChecklists(server: McpServer) {
 
       if (action === 'toggle_item' || action === 'remove_item') {
         if (!itemId) return { isError: true, content: [{ type: 'text', text: 'ItemId required' }] };
-        
+
         // We might need to search across all lists if list isn't explicit
         if (!list) {
-           // Search all lists
-           for (const c of task.checklists) {
-             if (c.items.some(i => i.id === itemId)) {
-               list = c;
-               break;
-             }
-           }
+          // Check again in case it was explicitly undefined.
+          // Search all lists
+          for (const c of task.checklists) {
+            if (c.items.some((i) => i.id === itemId)) {
+              list = c;
+              break;
+            }
+          }
         }
-        
+
         if (!list) return { isError: true, content: [{ type: 'text', text: 'Item not found' }] };
-        
+
         if (action === 'toggle_item') {
-          const item = list.items.find(i => i.id === itemId);
+          const item = list.items.find((i) => i.id === itemId);
           if (item) item.completed = !item.completed;
         } else {
-          list.items = list.items.filter(i => i.id !== itemId);
+          list.items = list.items.filter((i) => i.id !== itemId);
         }
-        
+
         await db.updateTask(task);
         return { content: [{ type: 'text', text: 'Item updated' }] };
       }

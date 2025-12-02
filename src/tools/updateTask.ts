@@ -1,10 +1,10 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { ProviderFactory } from '../services/providerFactory.js';
-import { AuditService } from '../services/auditService.js'; // Import AuditService
-import { UpdateTaskInput, Task } from '../types.js'; // Import Task type
+import { AuditService } from '../services/auditService.js';
+import { UpdateTaskInput, Task } from '../types.js';
 
-export function registerUpdateTask(server: McpServer) {
+export function registerUpdateTask(server: McpServer): void {
   server.registerTool(
     'update_task',
     {
@@ -26,11 +26,11 @@ export function registerUpdateTask(server: McpServer) {
         source: z.string().optional().describe('The provider source (e.g. github, local)'),
       }).shape,
     },
-    async (input: UpdateTaskInput) => { // Use UpdateTaskInput for type safety
+    async (input: UpdateTaskInput) => {
       const provider = await ProviderFactory.getProvider(input.source);
-      
+
       try {
-        const oldTask: Task | undefined = await provider.getTaskById(input.id); // Get old task for audit logging
+        const oldTask: Task | undefined = await provider.getTaskById(input.id);
 
         const updatedTask = await provider.updateTask(input);
 
@@ -39,7 +39,7 @@ export function registerUpdateTask(server: McpServer) {
           for (const key in input) {
             if (Object.prototype.hasOwnProperty.call(input, key) && key !== 'id' && key !== 'source') {
               const typedKey = key as keyof UpdateTaskInput;
-              const oldValue = (oldTask as any)[typedKey]; // Cast to any for dynamic access
+              const oldValue = oldTask[typedKey as keyof Task];
               const newValue = input[typedKey];
 
               // Deep compare for arrays like tags, otherwise simple compare
@@ -62,13 +62,14 @@ export function registerUpdateTask(server: McpServer) {
             },
           ],
         };
-      } catch (error: any) { // Keep error: any for now as error types can be diverse
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
         return {
           isError: true,
           content: [
             {
               type: 'text',
-              text: `Failed to update task: ${error.message}`,
+              text: `Failed to update task: ${errorMessage}`,
             },
           ],
         };

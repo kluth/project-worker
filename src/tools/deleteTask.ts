@@ -1,8 +1,8 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { ProviderFactory } from '../services/providerFactory.js';
 
-export function registerDeleteTask(server: McpServer) {
+export function registerDeleteTask(server: McpServer): void {
   server.registerTool(
     'delete_task',
     {
@@ -14,10 +14,10 @@ export function registerDeleteTask(server: McpServer) {
     },
     async ({ id, source }) => {
       const provider = await ProviderFactory.getProvider(source);
-      
+
       try {
         const success = await provider.deleteTask(id);
-        
+
         if (!success) {
           return {
             isError: true,
@@ -38,13 +38,14 @@ export function registerDeleteTask(server: McpServer) {
             },
           ],
         };
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
         return {
           isError: true,
           content: [
             {
               type: 'text',
-              text: `Failed to delete task: ${error.message}`,
+              text: `Failed to delete task: ${errorMessage}`,
             },
           ],
         };

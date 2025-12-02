@@ -1,9 +1,9 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { db } from '../db.js';
 import { AuditService } from '../services/auditService.js';
 
-export function registerLogWork(server: McpServer) {
+export function registerLogWork(server: McpServer): void {
   server.registerTool(
     'log_work',
     {
@@ -16,7 +16,8 @@ export function registerLogWork(server: McpServer) {
     },
     async ({ taskId, timeSpent, estimate }) => {
       const task = await db.getTaskById(taskId);
-      if (!task) return { isError: true, content: [{ type: 'text', text: `Task ${taskId} not found` }] };
+      if (!task)
+        return { isError: true, content: [{ type: 'text', text: `Task ${taskId} not found` }] };
 
       if (timeSpent !== undefined) {
         const oldVal = task.actualHours || 0;
@@ -36,11 +37,15 @@ export function registerLogWork(server: McpServer) {
         content: [
           {
             type: 'text',
-            text: JSON.stringify({ 
-              taskId, 
-              estimatedHours: task.estimatedHours, 
-              actualHours: task.actualHours 
-            }, null, 2),
+            text: JSON.stringify(
+              {
+                taskId,
+                estimatedHours: task.estimatedHours,
+                actualHours: task.actualHours,
+              },
+              null,
+              2,
+            ),
           },
         ],
       };

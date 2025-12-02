@@ -1,7 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import os from 'os';
-import { Task, AuditLogEntry, Sprint, WikiPage, Discussion, Release } from './types.js';
+import type { Task, AuditLogEntry, Sprint, WikiPage, Discussion, Release } from './types.js';
 
 const DB_DIR = path.join(os.homedir(), '.gemini-project-worker');
 const DB_FILE = path.join(DB_DIR, 'db.json');
@@ -24,14 +24,14 @@ class Database {
       await fs.access(DB_FILE);
     } catch {
       await fs.mkdir(DB_DIR, { recursive: true });
-      await this.save({ 
-        tasks: [], 
-        sprints: [], 
+      await this.save({
+        tasks: [],
+        sprints: [],
         releases: [],
-        auditLogs: [], 
+        auditLogs: [],
         wikiPages: [],
         discussions: [],
-        lastUpdated: new Date().toISOString() 
+        lastUpdated: new Date().toISOString(),
       });
     }
   }
@@ -43,18 +43,23 @@ class Database {
     try {
       this.data = JSON.parse(content);
       // Migrations
-      if (!this.data!.sprints) this.data!.sprints = [];
-      if (!this.data!.releases) this.data!.releases = [];
-      if (!this.data!.auditLogs) this.data!.auditLogs = [];
-      if (!this.data!.wikiPages) this.data!.wikiPages = [];
-      if (!this.data!.discussions) this.data!.discussions = [];
-      return this.data!;
-    } catch (error) {
-      console.error('Database corrupted, resetting...');
-      return { 
-        tasks: [], sprints: [], releases: [], auditLogs: [], 
-        wikiPages: [], discussions: [], 
-        lastUpdated: new Date().toISOString() 
+      if (!this.data.sprints) this.data.sprints = [];
+      if (!this.data.releases) this.data.releases = [];
+      if (!this.data.auditLogs) this.data.auditLogs = [];
+      if (!this.data.wikiPages) this.data.wikiPages = [];
+      if (!this.data.discussions) this.data.discussions = [];
+      return this.data; // Removed non-null assertion
+    } catch (error: unknown) {
+      // Use unknown for caught error
+      console.warn('Database corrupted, resetting...', error); // Changed to console.warn and added error
+      return {
+        tasks: [],
+        sprints: [],
+        releases: [],
+        auditLogs: [],
+        wikiPages: [],
+        discussions: [],
+        lastUpdated: new Date().toISOString(),
       };
     }
   }
@@ -142,7 +147,7 @@ class Database {
   async getAuditLogsForTask(taskId: string): Promise<AuditLogEntry[]> {
     const db = await this.load();
     return db.auditLogs
-      .filter(log => log.taskId === taskId)
+      .filter((log) => log.taskId === taskId)
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   }
 
@@ -155,12 +160,12 @@ class Database {
 
   async getWikiPageBySlug(slug: string): Promise<WikiPage | undefined> {
     const db = await this.load();
-    return db.wikiPages.find(p => p.slug === slug);
+    return db.wikiPages.find((p) => p.slug === slug);
   }
 
   async saveWikiPage(page: WikiPage): Promise<void> {
     const db = await this.load();
-    const index = db.wikiPages.findIndex(p => p.slug === page.slug);
+    const index = db.wikiPages.findIndex((p) => p.slug === page.slug);
     if (index !== -1) {
       db.wikiPages[index] = page;
     } else {
@@ -178,12 +183,12 @@ class Database {
 
   async getDiscussionById(id: string): Promise<Discussion | undefined> {
     const db = await this.load();
-    return db.discussions.find(d => d.id === id);
+    return db.discussions.find((d) => d.id === id);
   }
 
   async saveDiscussion(discussion: Discussion): Promise<void> {
     const db = await this.load();
-    const index = db.discussions.findIndex(d => d.id === discussion.id);
+    const index = db.discussions.findIndex((d) => d.id === discussion.id);
     if (index !== -1) {
       db.discussions[index] = discussion;
     } else {

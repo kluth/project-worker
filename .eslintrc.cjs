@@ -16,9 +16,12 @@ module.exports = {
     es6: true
   },
   rules: {
-    'prettier/prettier': 'warn', // Downgrade prettier errors to warnings
-    '@typescript-eslint/no-unused-vars': 'off', // Turn off unused vars for prototype velocity
-    '@typescript-eslint/no-explicit-any': 'off', // Turn off no-explicit-any for prototype velocity
-    'no-console': 'off'
+    'prettier/prettier': 'warn',
+    '@typescript-eslint/no-unused-vars': ['error', { 'argsIgnorePattern': '^_' }], // Enforce unused vars, allow _ prefix for ignored args
+    '@typescript-eslint/no-explicit-any': 'error', // Disallow explicit any
+    'no-console': ['error', { allow: ['warn', 'error'] }],
+    '@typescript-eslint/explicit-module-boundary-types': 'warn', // Consider adding explicit types for exported functions
+    '@typescript-eslint/no-non-null-assertion': 'warn', // Warn on non-null assertions
+    '@typescript-eslint/consistent-type-imports': 'error', // Enforce consistent import types
   }
 }

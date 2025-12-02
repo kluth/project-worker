@@ -1,50 +1,68 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { configManager } from '../config.js';
 
-export function registerManageConnections(server: McpServer) {
+export function registerManageConnections(server: McpServer): void {
   server.registerTool(
     'manage_connections',
     {
       description: 'Configure external tool integrations (GitHub, Jira, Trello, Asana).',
       inputSchema: z.object({
         action: z.enum(['set_active', 'configure', 'list']).describe('Action to perform'),
-        provider: z.enum(['local', 'github', 'jira', 'trello', 'asana', 'monday', 'azure-devops']).optional(),
-        credentials: z.record(z.string()).optional().describe('Jira: email, token; Trello: key, token; Asana: token'),
-        settings: z.record(z.string()).optional().describe('Jira: domain, projectKey; Trello: boardId; Asana: projectId'),
+        provider: z
+          .enum(['local', 'github', 'jira', 'trello', 'asana', 'monday', 'azure-devops'])
+          .optional(),
+        credentials: z
+          .record(z.string())
+          .optional()
+          .describe('Jira: email, token; Trello: key, token; Asana: token'),
+        settings: z
+          .record(z.string())
+          .optional()
+          .describe('Jira: domain, projectKey; Trello: boardId; Asana: projectId'),
       }).shape,
     },
     async ({ action, provider, credentials, settings }) => {
-      
       if (action === 'list') {
         const config = await configManager.get();
         // Mask secrets
-        const safeList = config.providers.map(p => ({
+        const safeList = config.providers.map((p) => ({
           ...p,
-          credentials: { ...p.credentials, token: '***', apiKey: '***', key: '***' }
+          credentials: { ...p.credentials, token: '***', apiKey: '***', key: '***' },
         }));
-        return { 
-          content: [{ 
-            type: 'text', 
-            text: JSON.stringify({ active: config.activeProvider, configured: safeList }, null, 2) 
-          }] 
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                { active: config.activeProvider, configured: safeList },
+                null,
+                2,
+              ),
+            },
+          ],
         };
       }
 
       if (action === 'set_active') {
-        if (!provider) return { isError: true, content: [{ type: 'text', text: 'Provider required' }] };
-        await configManager.setActiveProvider(provider as any);
+        if (!provider)
+          return { isError: true, content: [{ type: 'text', text: 'Provider required' }] };
+        await configManager.setActiveProvider(provider);
         return { content: [{ type: 'text', text: `Active provider set to ${provider}` }] };
       }
 
       if (action === 'configure') {
-        if (!provider || !credentials) return { isError: true, content: [{ type: 'text', text: 'Provider and credentials required' }] };
-        
+        if (!provider || !credentials)
+          return {
+            isError: true,
+            content: [{ type: 'text', text: 'Provider and credentials required' }],
+          };
+
         await configManager.setProviderConfig({
-          provider: provider as any,
+          provider: provider,
           enabled: true,
           credentials,
-          settings
+          settings,
         });
         return { content: [{ type: 'text', text: `Configuration saved for ${provider}` }] };
       }

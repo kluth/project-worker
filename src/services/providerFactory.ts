@@ -1,4 +1,4 @@
-import { ProjectProvider } from '../providers/types.js';
+import type { ProjectProvider } from '../providers/types.js';
 import { LocalProvider } from '../providers/LocalProvider.js';
 import { GitHubProvider } from '../providers/GitHubProvider.js';
 import { JiraProvider } from '../providers/JiraProvider.js';
@@ -16,16 +16,21 @@ export class ProviderFactory {
     const target = name || config.activeProvider;
 
     if (this.instances.has(target)) {
-      return this.instances.get(target)!;
+      const provider = this.instances.get(target);
+      if (provider) {
+        return provider;
+      }
+      // Should ideally not happen if .has(target) is true
+      throw new Error(`Internal error: Provider ${target} found in cache but is undefined.`);
     }
 
     // Validate that the provider is configured before trying to instantiate it,
     // except for local which is always valid.
     if (target !== 'local') {
-        const providerConfig = await configManager.getProviderConfig(target);
-        if (!providerConfig) {
-            throw new Error(`Provider "${target}" is not configured.`);
-        }
+      const providerConfig = await configManager.getProviderConfig(target);
+      if (!providerConfig) {
+        throw new Error(`Provider "${target}" is not configured.`);
+      }
     }
 
     let provider: ProjectProvider;

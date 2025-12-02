@@ -1,10 +1,10 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { db } from '../db.js';
-import { Release } from '../types.js';
+import type { Release } from '../types.js';
 import { randomUUID } from 'crypto';
 
-export function registerManageReleases(server: McpServer) {
+export function registerManageReleases(server: McpServer): void {
   server.registerTool(
     'manage_releases',
     {
@@ -19,16 +19,17 @@ export function registerManageReleases(server: McpServer) {
     },
     async (input) => {
       if (input.action === 'create') {
-        if (!input.name) return { isError: true, content: [{ type: 'text', text: 'Name required' }] };
-        
+        if (!input.name)
+          return { isError: true, content: [{ type: 'text', text: 'Name required' }] };
+
         const newRelease: Release = {
           id: randomUUID(),
           name: input.name,
           status: input.status || 'planned',
           releaseDate: input.releaseDate,
-          description: input.description
+          description: input.description,
         };
-        
+
         await db.addRelease(newRelease);
         return { content: [{ type: 'text', text: JSON.stringify(newRelease, null, 2) }] };
       }

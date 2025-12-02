@@ -1,9 +1,10 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { ProviderFactory } from '../services/providerFactory.js';
-import { CreateTaskInput } from '../types.js';
+import type { CreateTaskInput } from '../types.js'; // Keep for type annotation of 'input'
 
-export function registerCreateTask(server: McpServer) {
+export function registerCreateTask(server: McpServer): void {
+  // Add void return type
   server.registerTool(
     'create_task',
     {
@@ -19,10 +20,11 @@ export function registerCreateTask(server: McpServer) {
         source: z.enum(['local', 'github', 'jira']).optional().describe('Override active provider'),
       }).shape,
     },
-    async (input: any) => {
+    async (input: CreateTaskInput) => {
+      // Use CreateTaskInput for type safety
       const provider = await ProviderFactory.getProvider(input.source);
       const newTask = await provider.createTask(input);
-      
+
       return {
         content: [
           {
