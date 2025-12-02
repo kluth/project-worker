@@ -13,8 +13,9 @@ export class LocalProvider implements ProjectProvider {
       if (filter.status) tasks = tasks.filter((t) => t.status === filter.status);
       if (filter.priority) tasks = tasks.filter((t) => t.priority === filter.priority);
       if (filter.assignee)
-        tasks = tasks.filter((t) =>
-          t.assignee?.toLowerCase().includes(filter.assignee.toLowerCase()),
+        tasks = tasks.filter(
+          (t) =>
+            filter.assignee && t.assignee?.toLowerCase().includes(filter.assignee.toLowerCase()),
         );
       if (filter.search) {
         const term = filter.search.toLowerCase();

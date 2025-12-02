@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { registerStartSprint } from '../../src/tools/startSprint.js';
 import { registerEndSprint } from '../../src/tools/endSprint.js';
 import { registerGetSprintDetails } from '../../src/tools/getSprintDetails.js';
-import { configManager, AppConfig } from '../../src/config.js';
-import { Sprint } from '../../src/types.js';
+import type { AppConfig } from '../../src/config.js';
+import { configManager } from '../../src/config.js';
+import type { Sprint } from '../../src/types.js';
 
 // Mock configManager
 vi.mock('../../src/config.js', () => ({
@@ -40,13 +41,15 @@ describe('Sprint Management Tools', () => {
       expect(mockServer.registerTool).toHaveBeenCalledWith(
         'start_sprint',
         expect.any(Object),
-        expect.any(Function)
+        expect.any(Function),
       );
     });
 
     it('should start a new sprint', async () => {
       registerStartSprint(mockServer);
-      const handler = (mockServer.registerTool as any).mock.calls.find((c: any) => c[0] === 'start_sprint')[2];
+      const handler = (mockServer.registerTool as any).mock.calls.find(
+        (c: any) => c[0] === 'start_sprint',
+      )[2];
 
       const sprintName = 'Sprint 1';
       const sprintGoal = 'Deliver Feature X';
@@ -55,15 +58,17 @@ describe('Sprint Management Tools', () => {
       const result = await handler({ name: sprintName, duration, goal: sprintGoal });
 
       expect(configManager.get).toHaveBeenCalled();
-      expect(configManager.save).toHaveBeenCalledWith(expect.objectContaining({
-        sprints: expect.arrayContaining([
-          expect.objectContaining({
-            name: sprintName,
-            status: 'active',
-            goal: sprintGoal,
-          })
-        ])
-      }));
+      expect(configManager.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sprints: expect.arrayContaining([
+            expect.objectContaining({
+              name: sprintName,
+              status: 'active',
+              goal: sprintGoal,
+            }),
+          ]),
+        }),
+      );
       expect(result.content[0].text).toContain(`Sprint "${sprintName}" started successfully!`);
       expect(mockConfig.sprints).toHaveLength(1);
       expect(mockConfig.sprints[0].status).toBe('active');
@@ -81,7 +86,9 @@ describe('Sprint Management Tools', () => {
       (configManager.get as vi.Mock).mockResolvedValueOnce(mockConfig);
 
       registerStartSprint(mockServer);
-      const handler = (mockServer.registerTool as any).mock.calls.find((c: any) => c[0] === 'start_sprint')[2];
+      const handler = (mockServer.registerTool as any).mock.calls.find(
+        (c: any) => c[0] === 'start_sprint',
+      )[2];
 
       const result = await handler({ name: 'Sprint 2', duration: 1 });
 
@@ -97,7 +104,7 @@ describe('Sprint Management Tools', () => {
       expect(mockServer.registerTool).toHaveBeenCalledWith(
         'end_sprint',
         expect.any(Object),
-        expect.any(Function)
+        expect.any(Function),
       );
     });
 
@@ -114,27 +121,33 @@ describe('Sprint Management Tools', () => {
       (configManager.get as vi.Mock).mockResolvedValueOnce(mockConfig); // Ensure get returns the config with active sprint
 
       registerEndSprint(mockServer);
-      const handler = (mockServer.registerTool as any).mock.calls.find((c: any) => c[0] === 'end_sprint')[2];
+      const handler = (mockServer.registerTool as any).mock.calls.find(
+        (c: any) => c[0] === 'end_sprint',
+      )[2];
 
       const result = await handler({});
 
       expect(configManager.get).toHaveBeenCalled();
-      expect(configManager.save).toHaveBeenCalledWith(expect.objectContaining({
-        sprints: expect.arrayContaining([
-          expect.objectContaining({
-            id: activeSprint.id,
-            name: activeSprint.name,
-            status: 'completed',
-          })
-        ])
-      }));
+      expect(configManager.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sprints: expect.arrayContaining([
+            expect.objectContaining({
+              id: activeSprint.id,
+              name: activeSprint.name,
+              status: 'completed',
+            }),
+          ]),
+        }),
+      );
       expect(result.content[0].text).toContain(`Sprint "${activeSprint.name}" successfully ended.`);
       expect(mockConfig.sprints[0].status).toBe('completed');
     });
 
     it('should return an error if no active sprint is found', async () => {
       registerEndSprint(mockServer);
-      const handler = (mockServer.registerTool as any).mock.calls.find((c: any) => c[0] === 'end_sprint')[2];
+      const handler = (mockServer.registerTool as any).mock.calls.find(
+        (c: any) => c[0] === 'end_sprint',
+      )[2];
 
       const result = await handler({});
 
@@ -150,57 +163,113 @@ describe('Sprint Management Tools', () => {
       expect(mockServer.registerTool).toHaveBeenCalledWith(
         'get_sprint_details',
         expect.any(Object),
-        expect.any(Function)
+        expect.any(Function),
       );
     });
 
     it('should list all sprints if no id is provided', async () => {
-      const sprint1: Sprint = { id: 's1', name: 'S1', startDate: 'd1', endDate: 'd2', status: 'completed' };
-      const sprint2: Sprint = { id: 's2', name: 'S2', startDate: 'd3', endDate: 'd4', status: 'active' };
+      const sprint1: Sprint = {
+        id: 's1',
+        name: 'S1',
+        startDate: 'd1',
+        endDate: 'd2',
+        status: 'completed',
+      };
+      const sprint2: Sprint = {
+        id: 's2',
+        name: 'S2',
+        startDate: 'd3',
+        endDate: 'd4',
+        status: 'active',
+      };
       mockConfig.sprints.push(sprint1, sprint2);
       (configManager.get as vi.Mock).mockResolvedValueOnce(mockConfig);
 
       registerGetSprintDetails(mockServer);
-      const handler = (mockServer.registerTool as any).mock.calls.find((c: any) => c[0] === 'get_sprint_details')[2];
+      const handler = (mockServer.registerTool as any).mock.calls.find(
+        (c: any) => c[0] === 'get_sprint_details',
+      )[2];
 
       const result = await handler({});
       expect(result.content[0].text).toEqual(JSON.stringify([sprint1, sprint2], null, 2));
     });
 
     it('should return details for a specific sprint by id', async () => {
-      const sprint1: Sprint = { id: 's1', name: 'S1', startDate: 'd1', endDate: 'd2', status: 'completed' };
-      const sprint2: Sprint = { id: 's2', name: 'S2', startDate: 'd3', endDate: 'd4', status: 'active' };
+      const sprint1: Sprint = {
+        id: 's1',
+        name: 'S1',
+        startDate: 'd1',
+        endDate: 'd2',
+        status: 'completed',
+      };
+      const sprint2: Sprint = {
+        id: 's2',
+        name: 'S2',
+        startDate: 'd3',
+        endDate: 'd4',
+        status: 'active',
+      };
       mockConfig.sprints.push(sprint1, sprint2);
       (configManager.get as vi.Mock).mockResolvedValueOnce(mockConfig);
 
       registerGetSprintDetails(mockServer);
-      const handler = (mockServer.registerTool as any).mock.calls.find((c: any) => c[0] === 'get_sprint_details')[2];
+      const handler = (mockServer.registerTool as any).mock.calls.find(
+        (c: any) => c[0] === 'get_sprint_details',
+      )[2];
 
       const result = await handler({ sprintId: 's2' });
       expect(result.content[0].text).toEqual(JSON.stringify([sprint2], null, 2));
     });
 
     it('should filter sprints by status', async () => {
-      const sprint1: Sprint = { id: 's1', name: 'S1', startDate: 'd1', endDate: 'd2', status: 'completed' };
-      const sprint2: Sprint = { id: 's2', name: 'S2', startDate: 'd3', endDate: 'd4', status: 'active' };
-      const sprint3: Sprint = { id: 's3', name: 'S3', startDate: 'd5', endDate: 'd6', status: 'planned' };
+      const sprint1: Sprint = {
+        id: 's1',
+        name: 'S1',
+        startDate: 'd1',
+        endDate: 'd2',
+        status: 'completed',
+      };
+      const sprint2: Sprint = {
+        id: 's2',
+        name: 'S2',
+        startDate: 'd3',
+        endDate: 'd4',
+        status: 'active',
+      };
+      const sprint3: Sprint = {
+        id: 's3',
+        name: 'S3',
+        startDate: 'd5',
+        endDate: 'd6',
+        status: 'planned',
+      };
       mockConfig.sprints.push(sprint1, sprint2, sprint3);
       (configManager.get as vi.Mock).mockResolvedValueOnce(mockConfig);
 
       registerGetSprintDetails(mockServer);
-      const handler = (mockServer.registerTool as any).mock.calls.find((c: any) => c[0] === 'get_sprint_details')[2];
+      const handler = (mockServer.registerTool as any).mock.calls.find(
+        (c: any) => c[0] === 'get_sprint_details',
+      )[2];
 
       const result = await handler({ status: 'active' });
       expect(result.content[0].text).toEqual(JSON.stringify([sprint2], null, 2));
     });
 
     it('should return an error if sprint not found by id', async () => {
-      const sprint1: Sprint = { id: 's1', name: 'S1', startDate: 'd1', endDate: 'd2', status: 'completed' };
+      const sprint1: Sprint = {
+        id: 's1',
+        name: 'S1',
+        startDate: 'd1',
+        endDate: 'd2',
+        status: 'completed',
+      };
       mockConfig.sprints.push(sprint1);
       (configManager.get as vi.Mock).mockResolvedValueOnce(mockConfig);
 
       registerGetSprintDetails(mockServer);
-      const handler = (mockServer.registerTool as any).mock.calls.find((c: any) => c[0] === 'get_sprint_details')[2];
+      const handler = (mockServer.registerTool as any).mock.calls.find(
+        (c: any) => c[0] === 'get_sprint_details',
+      )[2];
 
       const result = await handler({ sprintId: 'non-existent' });
       expect(result.isError).toBe(true);
@@ -209,7 +278,9 @@ describe('Sprint Management Tools', () => {
 
     it('should return message if no sprints found matching criteria', async () => {
       registerGetSprintDetails(mockServer);
-      const handler = (mockServer.registerTool as any).mock.calls.find((c: any) => c[0] === 'get_sprint_details')[2];
+      const handler = (mockServer.registerTool as any).mock.calls.find(
+        (c: any) => c[0] === 'get_sprint_details',
+      )[2];
 
       const result = await handler({ status: 'active' }); // No sprints in mockConfig
       expect(result.content[0].text).toContain('No sprints found matching the criteria.');

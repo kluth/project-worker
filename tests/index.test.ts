@@ -19,115 +19,29 @@ import type {
 
 // --- Hoisted Mocks Section ---
 
-// Declare variables that will hold the mocked implementations
-let fsMocks: {
-  access: ReturnType<typeof vi.fn>;
-  mkdir: ReturnType<typeof vi.fn>;
-  readFile: ReturnType<typeof vi.fn>;
-  writeFile: ReturnType<typeof vi.fn>;
-};
-let MockMcpServer: ReturnType<typeof vi.fn>;
-let mockRegisterTool: ReturnType<typeof vi.fn>;
-let mockRegisterPrompt: ReturnType<typeof vi.fn>;
-let mockConnect: ReturnType<typeof vi.fn>;
-let dbMocks: {
-  getTasks: ReturnType<typeof vi.fn>;
-  addTask: ReturnType<typeof vi.fn>;
-  getTaskById: ReturnType<typeof vi.fn>;
-  updateTask: ReturnType<typeof vi.fn>;
-  deleteTask: ReturnType<typeof vi.fn>;
-  getSprints: ReturnType<typeof vi.fn>;
-  addSprint: ReturnType<typeof vi.fn>;
-  addAuditLog: ReturnType<typeof vi.fn>;
-  getAuditLogsForTask: ReturnType<typeof vi.fn>;
-  getWikiPages: ReturnType<typeof vi.fn>;
-  getWikiPageBySlug: ReturnType<typeof vi.fn>;
-  saveWikiPage: ReturnType<typeof vi.fn>;
-  getDiscussions: ReturnType<typeof vi.fn>;
-  getDiscussionById: ReturnType<typeof vi.fn>;
-  saveDiscussion: ReturnType<typeof vi.fn>;
-  getReleases: ReturnType<typeof vi.fn>;
-  addRelease: ReturnType<typeof vi.fn>;
-};
-let mockConfigManager: {
-  get: ReturnType<typeof vi.fn>;
-  setProviderConfig: ReturnType<typeof vi.fn>;
-  setActiveProvider: ReturnType<typeof vi.fn>;
-  getProviderConfig: ReturnType<typeof vi.fn>;
-  save: ReturnType<typeof vi.fn>;
-};
-let mockExec: ReturnType<typeof vi.fn>;
-let mockLocalProviderInstanceMethods: {
-  getTasks: ReturnType<typeof vi.fn>;
-  createTask: ReturnType<typeof vi.fn>;
-  getTaskById: ReturnType<typeof vi.fn>;
-  updateTask: ReturnType<typeof vi.fn>;
-  deleteTask: ReturnType<typeof vi.fn>;
-  addComment: ReturnType<typeof vi.fn>;
-};
-let mockGitHubProviderInstanceMethods: typeof mockLocalProviderInstanceMethods;
-let mockJiraProviderInstanceMethods: typeof mockLocalProviderInstanceMethods;
-let mockTrelloProviderInstanceMethods: typeof mockLocalProviderInstanceMethods;
-let mockAsanaProviderInstanceMethods: typeof mockLocalProviderInstanceMethods;
-let mockAzureProviderInstanceMethods: typeof mockLocalProviderInstanceMethods;
-let mockMondayProviderInstanceMethods: typeof mockLocalProviderInstanceMethods;
-// mockProvider is used internally within the vi.mock implementations, no need to expose globally
+// Use vi.hoisted to ensure these are available during module mocking
+const {
+  fsMocks,
+  MockMcpServer,
+  mockRegisterTool,
+  mockRegisterPrompt,
+  mockConnect,
+  dbMocks,
+  mockConfigManager,
+  mockExec,
+  mockLocalProviderInstanceMethods,
+  mockGitHubProviderInstanceMethods,
+  mockJiraProviderInstanceMethods,
+  mockTrelloProviderInstanceMethods,
+  mockAsanaProviderInstanceMethods,
+  mockAzureProviderInstanceMethods,
+  mockMondayProviderInstanceMethods,
+} = vi.hoisted(() => {
+  const mockRegisterTool = vi.fn<[string, unknown, (...args: unknown[]) => unknown], unknown>();
+  const mockRegisterPrompt = vi.fn<[string, unknown, (...args: unknown[]) => unknown], unknown>();
+  const mockConnect = vi.fn();
 
-vi.hoisted(() => {
-  fsMocks = {
-    access: vi.fn(),
-    mkdir: vi.fn(),
-    readFile: vi.fn(),
-    writeFile: vi.fn(),
-  };
-
-  mockRegisterTool = vi.fn<[string, unknown, (...args: unknown[]) => unknown], unknown>();
-  mockRegisterPrompt = vi.fn<[string, unknown, (...args: unknown[]) => unknown], unknown>();
-  mockConnect = vi.fn();
-
-  MockMcpServer = vi.fn<[unknown], unknown>().mockImplementation(function (this: unknown) {
-    Object.assign(this, {
-      registerTool: mockRegisterTool,
-      registerPrompt: mockRegisterPrompt,
-      connect: mockConnect, // Used here
-    });
-  });
-
-  dbMocks = {
-    getTasks: vi.fn<[], Promise<Task[]>>(),
-    addTask: vi.fn<[Task], Promise<void>>(),
-    getTaskById: vi.fn<[string], Promise<Task | undefined>>(),
-    updateTask: vi.fn<[Task], Promise<void>>(),
-    deleteTask: vi.fn<[string], Promise<boolean>>(),
-    getSprints: vi.fn<[], Promise<Sprint[]>>(),
-    addSprint: vi.fn<[Sprint], Promise<void>>(),
-    addAuditLog: vi.fn<[AuditLogEntry], Promise<void>>(),
-    getAuditLogsForTask: vi.fn<[string], Promise<AuditLogEntry[]>>(),
-    getWikiPages: vi.fn<[], Promise<WikiPage[]>>(),
-    getWikiPageBySlug: vi.fn<[string], Promise<WikiPage | undefined>>(),
-    saveWikiPage: vi.fn<[WikiPage], Promise<void>>(),
-    getDiscussions: vi.fn<[], Promise<Discussion[]>>(),
-    getDiscussionById: vi.fn<[string], Promise<Discussion | undefined>>(),
-    saveDiscussion: vi.fn<[Discussion], Promise<void>>(),
-    getReleases: vi.fn<[], Promise<Release[]>>(),
-    addRelease: vi.fn<[Release], Promise<void>>(),
-  };
-
-  mockConfigManager = {
-    get: vi.fn<[], Promise<unknown>>(),
-    setProviderConfig: vi.fn<[unknown], Promise<void>>(),
-    setActiveProvider: vi.fn<[unknown], Promise<void>>(),
-    getProviderConfig: vi.fn<[string], Promise<unknown>>(),
-    save: vi.fn<[unknown], Promise<void>>(),
-  };
-
-  mockExec = vi.fn(
-    (_cmd: string, cb: (error: Error | null, stdout: string, stderr: string) => void) => {
-      cb(null, 'mock stdout', '');
-    },
-  );
-
-  mockLocalProviderInstanceMethods = {
+  const mockLocalProviderInstanceMethods = {
     getTasks: vi.fn<[TaskFilter?], Promise<Task[]>>(),
     createTask: vi.fn<[CreateTaskInput], Promise<Task>>(),
     getTaskById: vi.fn<[string], Promise<Task | undefined>>(),
@@ -135,12 +49,63 @@ vi.hoisted(() => {
     deleteTask: vi.fn<[string], Promise<boolean>>(),
     addComment: vi.fn<[string, string], Promise<Task>>(),
   };
-  mockGitHubProviderInstanceMethods = { ...mockLocalProviderInstanceMethods };
-  mockJiraProviderInstanceMethods = { ...mockLocalProviderInstanceMethods };
-  mockTrelloProviderInstanceMethods = { ...mockLocalProviderInstanceMethods };
-  mockAsanaProviderInstanceMethods = { ...mockLocalProviderInstanceMethods };
-  mockAzureProviderInstanceMethods = { ...mockLocalProviderInstanceMethods };
-  mockMondayProviderInstanceMethods = { ...mockLocalProviderInstanceMethods };
+
+  return {
+    fsMocks: {
+      access: vi.fn(),
+      mkdir: vi.fn(),
+      readFile: vi.fn(),
+      writeFile: vi.fn(),
+    },
+    mockRegisterTool,
+    mockRegisterPrompt,
+    mockConnect,
+    MockMcpServer: vi.fn<[unknown], unknown>().mockImplementation(function (this: unknown) {
+      Object.assign(this, {
+        registerTool: mockRegisterTool,
+        registerPrompt: mockRegisterPrompt,
+        connect: mockConnect,
+      });
+    }),
+    dbMocks: {
+      getTasks: vi.fn<[], Promise<Task[]>>(),
+      addTask: vi.fn<[Task], Promise<void>>(),
+      getTaskById: vi.fn<[string], Promise<Task | undefined>>(),
+      updateTask: vi.fn<[Task], Promise<void>>(),
+      deleteTask: vi.fn<[string], Promise<boolean>>(),
+      getSprints: vi.fn<[], Promise<Sprint[]>>(),
+      addSprint: vi.fn<[Sprint], Promise<void>>(),
+      addAuditLog: vi.fn<[AuditLogEntry], Promise<void>>(),
+      getAuditLogsForTask: vi.fn<[string], Promise<AuditLogEntry[]>>(),
+      getWikiPages: vi.fn<[], Promise<WikiPage[]>>(),
+      getWikiPageBySlug: vi.fn<[string], Promise<WikiPage | undefined>>(),
+      saveWikiPage: vi.fn<[WikiPage], Promise<void>>(),
+      getDiscussions: vi.fn<[], Promise<Discussion[]>>(),
+      getDiscussionById: vi.fn<[string], Promise<Discussion | undefined>>(),
+      saveDiscussion: vi.fn<[Discussion], Promise<void>>(),
+      getReleases: vi.fn<[], Promise<Release[]>>(),
+      addRelease: vi.fn<[Release], Promise<void>>(),
+    },
+    mockConfigManager: {
+      get: vi.fn<[], Promise<unknown>>(),
+      setProviderConfig: vi.fn<[unknown], Promise<void>>(),
+      setActiveProvider: vi.fn<[unknown], Promise<void>>(),
+      getProviderConfig: vi.fn<[string], Promise<unknown>>(),
+      save: vi.fn<[unknown], Promise<void>>(),
+    },
+    mockExec: vi.fn(
+      (_cmd: string, cb: (error: Error | null, stdout: string, stderr: string) => void) => {
+        cb(null, 'mock stdout', '');
+      },
+    ),
+    mockLocalProviderInstanceMethods,
+    mockGitHubProviderInstanceMethods: { ...mockLocalProviderInstanceMethods },
+    mockJiraProviderInstanceMethods: { ...mockLocalProviderInstanceMethods },
+    mockTrelloProviderInstanceMethods: { ...mockLocalProviderInstanceMethods },
+    mockAsanaProviderInstanceMethods: { ...mockLocalProviderInstanceMethods },
+    mockAzureProviderInstanceMethods: { ...mockLocalProviderInstanceMethods },
+    mockMondayProviderInstanceMethods: { ...mockLocalProviderInstanceMethods },
+  };
 });
 
 // --- Global Mocks for external dependencies ---

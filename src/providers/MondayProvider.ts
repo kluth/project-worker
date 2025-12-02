@@ -1,5 +1,5 @@
 import type { ProjectProvider } from './types.js';
-import type { Task, CreateTaskInput, TaskFilter } from '../types.js';
+import type { Task, CreateTaskInput, UpdateTaskInput, TaskFilter } from '../types.js';
 import type { ConfigManager } from '../config.js';
 
 interface MondayConfig {
@@ -40,13 +40,15 @@ export class MondayProvider implements ProjectProvider {
     if (
       !providerConfig ||
       !providerConfig.credentials?.token ||
-      !providerConfig.settings?.boardId
+      typeof providerConfig.settings?.boardId !== 'string'
     ) {
-      throw new Error('Monday.com not configured. Required: credentials.token, settings.boardId');
+      throw new Error(
+        'Monday.com not configured. Required: credentials.token, settings.boardId (string)',
+      );
     }
     this.config = {
       token: providerConfig.credentials.token,
-      boardId: providerConfig.settings.boardId,
+      boardId: providerConfig.settings.boardId as string,
     };
   }
 
@@ -55,7 +57,7 @@ export class MondayProvider implements ProjectProvider {
     await this.init();
     const query = `
       query {
-        boards (ids: [${this.config.boardId}]) { // Removed !
+        boards (ids: [${this.config!.boardId}]) { // Removed !
           items_page {
             items {
               id
@@ -120,7 +122,7 @@ export class MondayProvider implements ProjectProvider {
     await this.init();
     const query = `
       mutation {
-        create_item (board_id: ${this.config.boardId}, item_name: "${input.title}") { // Removed !
+        create_item (board_id: ${this.config!.boardId}, item_name: "${input.title}") { // Removed !
           id
           name
           created_at

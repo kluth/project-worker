@@ -24,12 +24,19 @@ export class TrelloProvider implements ProjectProvider {
   private async init() {
     if (this.token) return;
     const config = await this.configManager.getProviderConfig('trello');
-    if (!config || !config.credentials.token || !config.settings?.boardId) {
-      throw new Error('Trello not configured. Need key, token, and boardId.');
+    if (
+      !config ||
+      typeof config.credentials?.token !== 'string' ||
+      typeof config.credentials?.key !== 'string' ||
+      typeof config.settings?.boardId !== 'string'
+    ) {
+      throw new Error(
+        'Trello not configured. Need key (string), token (string), and boardId (string).',
+      );
     }
-    this.key = config.credentials.key;
+    this.key = config.credentials.key as string;
     this.token = config.credentials.token;
-    this.boardId = config.settings.boardId;
+    this.boardId = config.settings.boardId as string;
   }
 
   private mapCardToTask(card: TrelloCardResponse): Task {

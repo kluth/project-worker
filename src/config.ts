@@ -1,13 +1,13 @@
 import fs from 'fs/promises';
 import path from 'path';
 import os from 'os';
-import { Sprint, TaskStatus, Event } from './types.js'; // Import Sprint, TaskStatus, and Event types
+import type { Sprint, TaskStatus, Event } from './types.js'; // Import Sprint, TaskStatus, and Event types
 
 const CONFIG_DIR = path.join(os.homedir(), '.gemini-project-worker');
 const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json');
 
 export interface ProviderConfig {
-  provider: 'github' | 'jira' | 'trello' | 'asana' | 'azure-devops' | 'monday';
+  provider: 'github' | 'jira' | 'trello' | 'asana' | 'azure-devops' | 'monday' | 'local';
   enabled: boolean;
   credentials: Record<string, string>; // e.g., { apiKey: '...', email: '...' }
   settings?: Record<string, unknown>; // Changed 'any' to 'unknown'
@@ -35,9 +35,10 @@ export interface AppConfig {
 const DEFAULT_CONFIG: AppConfig = {
   activeProvider: 'local',
   providers: [],
-  agileMethodology: { // Default agile methodology configuration
+  agileMethodology: {
+    // Default agile methodology configuration
     type: 'scrum',
-    settings: {}
+    settings: {},
   },
   sprints: [], // Default for sprints
   kanbanBoards: [], // Default for kanban boards
@@ -47,21 +48,29 @@ const DEFAULT_CONFIG: AppConfig = {
 export class ConfigManager {
   private config: AppConfig | null = null;
 
-  // ... ensureConfigExists ...
+  private async ensureConfigExists(): Promise<void> {
+    if (!(await fs.readdir(CONFIG_DIR).catch(() => null))) {
+      await fs.mkdir(CONFIG_DIR, { recursive: true });
+    }
+    if (!(await fs.readFile(CONFIG_FILE).catch(() => null))) {
+      await fs.writeFile(CONFIG_FILE, JSON.stringify(DEFAULT_CONFIG, null, 2), 'utf-8');
+    }
+  }
 
   private async load(): Promise<AppConfig> {
     if (this.config) return this.config;
     await this.ensureConfigExists();
     const content = await fs.readFile(CONFIG_FILE, 'utf-8');
     try {
-      this.config = JSON.parse(content);
+      const parsedConfig: AppConfig = JSON.parse(content);
       // Ensure new fields are initialized for existing configs
-      this.config.agileMethodology =
-        this.config.agileMethodology || DEFAULT_CONFIG.agileMethodology;
-      this.config.sprints = this.config.sprints || DEFAULT_CONFIG.sprints;
-      this.config.kanbanBoards = this.config.kanbanBoards || DEFAULT_CONFIG.kanbanBoards;
-      this.config.events = this.config.events || DEFAULT_CONFIG.events;
-      return this.config; // Removed non-null assertion as this.config is now guaranteed to be set
+      parsedConfig.agileMethodology =
+        parsedConfig.agileMethodology || DEFAULT_CONFIG.agileMethodology;
+      parsedConfig.sprints = parsedConfig.sprints || DEFAULT_CONFIG.sprints;
+      parsedConfig.kanbanBoards = parsedConfig.kanbanBoards || DEFAULT_CONFIG.kanbanBoards;
+      parsedConfig.events = parsedConfig.events || DEFAULT_CONFIG.events;
+      this.config = parsedConfig; // Assign to this.config after ensuring it's fully initialized
+      return parsedConfig;
     } catch (e: unknown) {
       // Catch as unknown
       console.error('Error loading config, using default:', e); // Added console.error for debugging
@@ -77,6 +86,13 @@ export class ConfigManager {
 
   async get(): Promise<AppConfig> {
     return this.load();
+  }
+
+  async getProviderConfig(
+    providerName: AppConfig['activeProvider'],
+  ): Promise<ProviderConfig | undefined> {
+    const config = await this.load();
+    return config.providers.find((p) => p.provider === providerName);
   }
 
   async setProviderConfig(config: ProviderConfig): Promise<void> {

@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { registerSetWipLimit } from '../../src/tools/setWipLimit.js';
 import { registerGetBoardStatus } from '../../src/tools/getBoardStatus.js';
-import { configManager, AppConfig, KanbanBoardConfig } from '../../src/config.js';
+import type { AppConfig, KanbanBoardConfig } from '../../src/config.js';
+import { configManager } from '../../src/config.js';
 import { ProviderFactory } from '../../src/services/providerFactory.js';
-import { Task } from '../../src/types.js';
+import type { Task } from '../../src/types.js';
 
 // Mock configManager
 vi.mock('../../src/config.js', () => ({
@@ -54,13 +55,15 @@ describe('Kanban Management Tools', () => {
       expect(mockServer.registerTool).toHaveBeenCalledWith(
         'set_wip_limit',
         expect.any(Object),
-        expect.any(Function)
+        expect.any(Function),
       );
     });
 
     it('should set a WIP limit for a status on a new board', async () => {
       registerSetWipLimit(mockServer);
-      const handler = (mockServer.registerTool as any).mock.calls.find((c: any) => c[0] === 'set_wip_limit')[2];
+      const handler = (mockServer.registerTool as any).mock.calls.find(
+        (c: any) => c[0] === 'set_wip_limit',
+      )[2];
 
       const boardName = 'My Kanban';
       const status = 'in progress';
@@ -69,15 +72,19 @@ describe('Kanban Management Tools', () => {
       const result = await handler({ boardName, status, limit });
 
       expect(configManager.get).toHaveBeenCalled();
-      expect(configManager.save).toHaveBeenCalledWith(expect.objectContaining({
-        kanbanBoards: expect.arrayContaining([
-          expect.objectContaining({
-            boardName: boardName,
-            wipLimits: { [status]: limit },
-          })
-        ])
-      }));
-      expect(result.content[0].text).toContain(`WIP limit for status "${status}" on board "${boardName}" set to ${limit}.`);
+      expect(configManager.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          kanbanBoards: expect.arrayContaining([
+            expect.objectContaining({
+              boardName: boardName,
+              wipLimits: { [status]: limit },
+            }),
+          ]),
+        }),
+      );
+      expect(result.content[0].text).toContain(
+        `WIP limit for status "${status}" on board "${boardName}" set to ${limit}.`,
+      );
       expect(mockConfig.kanbanBoards).toHaveLength(1);
       expect(mockConfig.kanbanBoards[0].wipLimits[status]).toBe(limit);
     });
@@ -85,13 +92,15 @@ describe('Kanban Management Tools', () => {
     it('should update a WIP limit for an existing status on an existing board', async () => {
       const existingBoard: KanbanBoardConfig = {
         boardName: 'My Kanban',
-        wipLimits: { 'in progress': 2, 'todo': 5 },
+        wipLimits: { 'in progress': 2, todo: 5 },
       };
       mockConfig.kanbanBoards.push(existingBoard);
       (configManager.get as vi.Mock).mockResolvedValueOnce(mockConfig);
 
       registerSetWipLimit(mockServer);
-      const handler = (mockServer.registerTool as any).mock.calls.find((c: any) => c[0] === 'set_wip_limit')[2];
+      const handler = (mockServer.registerTool as any).mock.calls.find(
+        (c: any) => c[0] === 'set_wip_limit',
+      )[2];
 
       const boardName = 'My Kanban';
       const status = 'in progress';
@@ -100,15 +109,19 @@ describe('Kanban Management Tools', () => {
       const result = await handler({ boardName, status, limit: newLimit });
 
       expect(configManager.get).toHaveBeenCalled();
-      expect(configManager.save).toHaveBeenCalledWith(expect.objectContaining({
-        kanbanBoards: expect.arrayContaining([
-          expect.objectContaining({
-            boardName: boardName,
-            wipLimits: { 'in progress': newLimit, 'todo': 5 },
-          })
-        ])
-      }));
-      expect(result.content[0].text).toContain(`WIP limit for status "${status}" on board "${boardName}" set to ${newLimit}.`);
+      expect(configManager.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          kanbanBoards: expect.arrayContaining([
+            expect.objectContaining({
+              boardName: boardName,
+              wipLimits: { 'in progress': newLimit, todo: 5 },
+            }),
+          ]),
+        }),
+      );
+      expect(result.content[0].text).toContain(
+        `WIP limit for status "${status}" on board "${boardName}" set to ${newLimit}.`,
+      );
       expect(mockConfig.kanbanBoards).toHaveLength(1);
       expect(mockConfig.kanbanBoards[0].wipLimits[status]).toBe(newLimit);
     });
@@ -120,13 +133,15 @@ describe('Kanban Management Tools', () => {
       expect(mockServer.registerTool).toHaveBeenCalledWith(
         'get_board_status',
         expect.any(Object),
-        expect.any(Function)
+        expect.any(Function),
       );
     });
 
     it('should return an error if the board is not found', async () => {
       registerGetBoardStatus(mockServer);
-      const handler = (mockServer.registerTool as any).mock.calls.find((c: any) => c[0] === 'get_board_status')[2];
+      const handler = (mockServer.registerTool as any).mock.calls.find(
+        (c: any) => c[0] === 'get_board_status',
+      )[2];
 
       const result = await handler({ boardName: 'NonExistent' });
 
@@ -143,15 +158,61 @@ describe('Kanban Management Tools', () => {
       (configManager.get as vi.Mock).mockResolvedValueOnce(mockConfig);
 
       const tasks: Task[] = [
-        { id: '1', title: 'Task A', status: 'to do', description: '', priority: 'medium', type: 'task', tags: [], comments: [], createdAt: '', updatedAt: '' },
-        { id: '2', title: 'Task B', status: 'in progress', description: '', priority: 'medium', type: 'task', tags: [], comments: [], createdAt: '', updatedAt: '' },
-        { id: '3', title: 'Task C', status: 'in progress', description: '', priority: 'medium', type: 'task', tags: [], comments: [], createdAt: '', updatedAt: '' },
-        { id: '4', title: 'Task D', status: 'done', description: '', priority: 'medium', type: 'task', tags: [], comments: [], createdAt: '', updatedAt: '' },
+        {
+          id: '1',
+          title: 'Task A',
+          status: 'to do',
+          description: '',
+          priority: 'medium',
+          type: 'task',
+          tags: [],
+          comments: [],
+          createdAt: '',
+          updatedAt: '',
+        },
+        {
+          id: '2',
+          title: 'Task B',
+          status: 'in progress',
+          description: '',
+          priority: 'medium',
+          type: 'task',
+          tags: [],
+          comments: [],
+          createdAt: '',
+          updatedAt: '',
+        },
+        {
+          id: '3',
+          title: 'Task C',
+          status: 'in progress',
+          description: '',
+          priority: 'medium',
+          type: 'task',
+          tags: [],
+          comments: [],
+          createdAt: '',
+          updatedAt: '',
+        },
+        {
+          id: '4',
+          title: 'Task D',
+          status: 'done',
+          description: '',
+          priority: 'medium',
+          type: 'task',
+          tags: [],
+          comments: [],
+          createdAt: '',
+          updatedAt: '',
+        },
       ];
       mockProvider.getTasks.mockResolvedValue(tasks);
 
       registerGetBoardStatus(mockServer);
-      const handler = (mockServer.registerTool as any).mock.calls.find((c: any) => c[0] === 'get_board_status')[2];
+      const handler = (mockServer.registerTool as any).mock.calls.find(
+        (c: any) => c[0] === 'get_board_status',
+      )[2];
 
       const result = await handler({});
 
@@ -172,18 +233,46 @@ describe('Kanban Management Tools', () => {
       (configManager.get as vi.Mock).mockResolvedValueOnce(mockConfig);
 
       const tasks: Task[] = [
-        { id: '1', title: 'Task A', status: 'in progress', description: '', priority: 'medium', type: 'task', tags: [], comments: [], createdAt: '', updatedAt: '' },
-        { id: '2', title: 'Task B', status: 'in progress', description: '', priority: 'medium', type: 'task', tags: [], comments: [], createdAt: '', updatedAt: '' },
+        {
+          id: '1',
+          title: 'Task A',
+          status: 'in progress',
+          description: '',
+          priority: 'medium',
+          type: 'task',
+          tags: [],
+          comments: [],
+          createdAt: '',
+          updatedAt: '',
+        },
+        {
+          id: '2',
+          title: 'Task B',
+          status: 'in progress',
+          description: '',
+          priority: 'medium',
+          type: 'task',
+          tags: [],
+          comments: [],
+          createdAt: '',
+          updatedAt: '',
+        },
       ];
       mockProvider.getTasks.mockResolvedValue(tasks);
 
       registerGetBoardStatus(mockServer);
-      const handler = (mockServer.registerTool as any).mock.calls.find((c: any) => c[0] === 'get_board_status')[2];
+      const handler = (mockServer.registerTool as any).mock.calls.find(
+        (c: any) => c[0] === 'get_board_status',
+      )[2];
 
       const result = await handler({});
 
-      expect(result.content[0].text).toContain('Status: in progress (Tasks: 2, WIP Limit: 1 - ***VIOLATION***)');
-      expect(result.content[0].text).toContain('***WARNING: One or more WIP limits have been violated!***');
+      expect(result.content[0].text).toContain(
+        'Status: in progress (Tasks: 2, WIP Limit: 1 - ***VIOLATION***)',
+      );
+      expect(result.content[0].text).toContain(
+        '***WARNING: One or more WIP limits have been violated!***',
+      );
     });
 
     it('should handle statuses with 0 limit (no limit)', async () => {
@@ -195,14 +284,49 @@ describe('Kanban Management Tools', () => {
       (configManager.get as vi.Mock).mockResolvedValueOnce(mockConfig);
 
       const tasks: Task[] = [
-        { id: '1', title: 'Task A', status: 'in progress', description: '', priority: 'medium', type: 'task', tags: [], comments: [], createdAt: '', updatedAt: '' },
-        { id: '2', title: 'Task B', status: 'in progress', description: '', priority: 'medium', type: 'task', tags: [], comments: [], createdAt: '', updatedAt: '' },
-        { id: '3', title: 'Task C', status: 'in progress', description: '', priority: 'medium', type: 'task', tags: [], comments: [], createdAt: '', updatedAt: '' },
+        {
+          id: '1',
+          title: 'Task A',
+          status: 'in progress',
+          description: '',
+          priority: 'medium',
+          type: 'task',
+          tags: [],
+          comments: [],
+          createdAt: '',
+          updatedAt: '',
+        },
+        {
+          id: '2',
+          title: 'Task B',
+          status: 'in progress',
+          description: '',
+          priority: 'medium',
+          type: 'task',
+          tags: [],
+          comments: [],
+          createdAt: '',
+          updatedAt: '',
+        },
+        {
+          id: '3',
+          title: 'Task C',
+          status: 'in progress',
+          description: '',
+          priority: 'medium',
+          type: 'task',
+          tags: [],
+          comments: [],
+          createdAt: '',
+          updatedAt: '',
+        },
       ];
       mockProvider.getTasks.mockResolvedValue(tasks);
 
       registerGetBoardStatus(mockServer);
-      const handler = (mockServer.registerTool as any).mock.calls.find((c: any) => c[0] === 'get_board_status')[2];
+      const handler = (mockServer.registerTool as any).mock.calls.find(
+        (c: any) => c[0] === 'get_board_status',
+      )[2];
 
       const result = await handler({});
 

@@ -41,18 +41,19 @@ class Database {
     await this.ensureDbExists();
     const content = await fs.readFile(DB_FILE, 'utf-8');
     try {
-      this.data = JSON.parse(content);
+      const parsedData: DatabaseSchema = JSON.parse(content);
       // Migrations
-      if (!this.data.sprints) this.data.sprints = [];
-      if (!this.data.releases) this.data.releases = [];
-      if (!this.data.auditLogs) this.data.auditLogs = [];
-      if (!this.data.wikiPages) this.data.wikiPages = [];
-      if (!this.data.discussions) this.data.discussions = [];
-      return this.data; // Removed non-null assertion
+      parsedData.sprints = parsedData.sprints || [];
+      parsedData.releases = parsedData.releases || [];
+      parsedData.auditLogs = parsedData.auditLogs || [];
+      parsedData.wikiPages = parsedData.wikiPages || [];
+      parsedData.discussions = parsedData.discussions || [];
+      this.data = parsedData;
+      return parsedData;
     } catch (error: unknown) {
       // Use unknown for caught error
       console.warn('Database corrupted, resetting...', error); // Changed to console.warn and added error
-      return {
+      const defaultData: DatabaseSchema = {
         tasks: [],
         sprints: [],
         releases: [],
@@ -61,6 +62,8 @@ class Database {
         discussions: [],
         lastUpdated: new Date().toISOString(),
       };
+      this.data = defaultData;
+      return defaultData;
     }
   }
 

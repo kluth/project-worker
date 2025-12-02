@@ -1,5 +1,12 @@
 import type { ProjectProvider } from './types.js';
-import type { Task, CreateTaskInput, UpdateTaskInput, TaskFilter, TaskType } from '../types.js';
+import type {
+  Task,
+  CreateTaskInput,
+  UpdateTaskInput,
+  TaskFilter,
+  TaskType,
+  TaskStatus,
+} from '../types.js';
 import type { ConfigManager } from '../config.js';
 
 interface JiraIssueResponse {
@@ -30,13 +37,18 @@ export class JiraProvider implements ProjectProvider {
   private async init() {
     if (this.token) return;
     const config = await this.configManager.getProviderConfig('jira');
-    if (!config || !config.credentials.token || !config.settings?.domain) {
-      throw new Error('Jira not configured. Need email, token, domain, and projectKey.');
+    if (
+      !config ||
+      !config.credentials.token ||
+      typeof config.settings?.domain !== 'string' ||
+      typeof config.credentials?.email !== 'string'
+    ) {
+      throw new Error('Jira not configured. Need email (string), token, and domain (string).');
     }
-    this.domain = config.settings.domain; // e.g., 'myorg.atlassian.net'
-    this.email = config.credentials.email;
+    this.domain = config.settings.domain as string; // e.g., 'myorg.atlassian.net'
+    this.email = config.credentials.email as string;
     this.token = config.credentials.token;
-    this.projectKey = config.settings.projectKey || ''; // Optional, but good for default create
+    this.projectKey = (config.settings.projectKey as string) || ''; // Optional, but good for default create
   }
 
   private getHeaders() {
@@ -60,7 +72,11 @@ export class JiraProvider implements ProjectProvider {
     let mappedStatus: TaskStatus;
     const jiraStatusName = fields.status.name.toLowerCase();
 
-    if (jiraStatusName === 'done' || jiraStatusName === 'closed' || jiraStatusName === 'completed') {
+    if (
+      jiraStatusName === 'done' ||
+      jiraStatusName === 'closed' ||
+      jiraStatusName === 'completed'
+    ) {
       mappedStatus = 'done';
     } else if (jiraStatusName.includes('in progress')) {
       mappedStatus = 'in-progress';
@@ -77,7 +93,7 @@ export class JiraProvider implements ProjectProvider {
     } else {
       mappedStatus = jiraStatusName; // Fallback to native Jira status
     }
-    
+
     return {
       id: issue.key,
       title: fields.summary,

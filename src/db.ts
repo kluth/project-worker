@@ -1,3 +1,8 @@
+import path from 'path';
+import os from 'os';
+import fs from 'fs';
+import Database from 'better-sqlite3';
+
 import type { Task, AuditLogEntry, Sprint, WikiPage, Discussion, Release } from './types.js';
 
 const DB_DIR = path.join(os.homedir(), '.gemini-project-worker');
@@ -285,12 +290,12 @@ class SQLiteDatabase {
   // --- Tasks ---
 
   async getTasks(): Promise<Task[]> {
-    const rows = this.db.prepare('SELECT * FROM tasks').all();
+    const rows = this.db.prepare('SELECT * FROM tasks').all() as TaskRow[];
     return rows.map(this.parseTask);
   }
 
   async getTaskById(id: string): Promise<Task | undefined> {
-    const row = this.db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
+    const row = this.db.prepare('SELECT * FROM tasks WHERE id = ?').get(id) as TaskRow | undefined;
     if (!row) return undefined;
     return this.parseTask(row);
   }
@@ -349,6 +354,7 @@ class SQLiteDatabase {
     return rows.map((row) => ({
       ...row,
       goal: row.goal || undefined, // Convert null to undefined if appropriate for Sprint interface
+      status: row.status as Sprint['status'], // Explicitly cast status
     }));
   }
 
@@ -368,6 +374,7 @@ class SQLiteDatabase {
       ...row,
       releaseDate: row.releaseDate || undefined,
       description: row.description || undefined,
+      status: row.status as Release['status'], // Explicitly cast status
     }));
   }
 
@@ -453,6 +460,7 @@ class SQLiteDatabase {
       ...row,
       messages: JSON.parse(row.messages),
       tags: JSON.parse(row.tags),
+      status: row.status as Discussion['status'], // Explicitly cast status
     }));
   }
 
@@ -465,6 +473,7 @@ class SQLiteDatabase {
       ...row,
       messages: JSON.parse(row.messages),
       tags: JSON.parse(row.tags),
+      status: row.status as Discussion['status'], // Explicitly cast status
     };
   }
 

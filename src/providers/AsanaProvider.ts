@@ -21,11 +21,13 @@ export class AsanaProvider implements ProjectProvider {
   private async init() {
     if (this.token) return;
     const config = await this.configManager.getProviderConfig('asana');
-    if (!config || !config.credentials.token || !config.settings?.projectId) {
-      throw new Error('Asana not configured.');
+    if (!config || !config.credentials.token || typeof config.settings?.projectId !== 'string') {
+      throw new Error(
+        'Asana not configured. Token and projectId (string) are required in settings.',
+      );
     }
     this.token = config.credentials.token;
-    this.projectId = config.settings.projectId;
+    this.projectId = config.settings.projectId as string;
   }
 
   private getHeaders() {

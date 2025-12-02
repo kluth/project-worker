@@ -13,7 +13,14 @@ export class ProviderFactory {
 
   static async getProvider(name?: string): Promise<ProjectProvider> {
     const config = await configManager.get();
-    const target = name || config.activeProvider;
+    const target = (name || config.activeProvider) as
+      | 'github'
+      | 'jira'
+      | 'trello'
+      | 'asana'
+      | 'azure-devops'
+      | 'monday'
+      | 'local';
 
     if (this.instances.has(target)) {
       const provider = this.instances.get(target);
