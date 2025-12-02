@@ -53,7 +53,7 @@ registerManageDiscussions(server);
 
 // Advanced Features
 registerManageDependencies(server);
-registerManageSprints(server);
+registerManageSprints(server); // Existing sprint tool
 registerGitTools(server);
 
 // Event Management (New Tools)
@@ -67,6 +67,14 @@ import { registerSetWipLimit } from './tools/setWipLimit.js';
 import { registerGetBoardStatus } from './tools/getBoardStatus.js';
 registerSetWipLimit(server);
 registerGetBoardStatus(server);
+
+// Sprint Management (New Tools)
+import { registerStartSprint } from './tools/startSprint.js';
+import { registerEndSprint } from './tools/endSprint.js';
+import { registerGetSprintDetails } from './tools/getSprintDetails.js';
+registerStartSprint(server);
+registerEndSprint(server);
+registerGetSprintDetails(server);
 
 // Enterprise Features
 registerManageReleases(server);

@@ -5,7 +5,6 @@ import { AsanaProvider } from '../src/providers/AsanaProvider.js';
 import { GitHubProvider } from '../src/providers/GitHubProvider.js';
 import { AzureDevOpsProvider } from '../src/providers/AzureDevOpsProvider.js';
 import { MondayProvider } from '../src/providers/MondayProvider.js';
-<<<<<<< HEAD
 import type { ConfigManager } from '../src/config.js';
 import type { TaskFilter } from '../src/types.js';
 import type { Octokit } from '@octokit/rest';
@@ -25,6 +24,7 @@ const { mockFetch } = vi.hoisted(() => {
 });
 global.fetch = mockFetch;
 
+<<<<<<< HEAD
 const { mockIssues, mockPaginate, MockOctokit } = vi.hoisted(() => {
   const mockIssues: Partial<Octokit['rest']['issues']> = {
     listForRepo: vi.fn(),
@@ -52,6 +52,7 @@ const { mockIssues, mockPaginate, MockOctokit } = vi.hoisted(() => {
 
 
 vi.mock('@octokit/rest', () => ({
+<<<<<<< HEAD
   Octokit: MockOctokit,
 }));
 
@@ -216,10 +217,8 @@ describe('Providers (TDD)', () => {
       mockIssues.get.mockClear();
       mockIssues.create.mockClear();
       mockIssues.update.mockClear();
-<<<<<<< HEAD
       mockIssues.createComment.mockClear();
       mockPaginate.mockClear(); // Clear paginate mock
-    });
 
     it('should fetch and map tasks correctly', async () => {
       mockConfig.getProviderConfig.mockResolvedValue({
@@ -250,8 +249,6 @@ describe('Providers (TDD)', () => {
       expect(tasks[0].id).toBe('1');
       expect(tasks[0].title).toBe('GitHub Issue');
       expect(tasks[0].assignee).toBe('octocat');
-      expect(tasks[0].tags).toEqual(['bug']);
-<<<<<<< HEAD
       expect(mockPaginate).toHaveBeenCalledWith( // Expect paginate to be called
         mockIssues.listForRepo, // Use mockIssues.listForRepo directly
         {
@@ -262,7 +259,6 @@ describe('Providers (TDD)', () => {
         }
       );
       expect(MockOctokit).toHaveBeenCalledWith({ auth: 'ghp_token' }); // Expect the constructor to be called
-    });
 
     it('should create a task', async () => {
       mockConfig.getProviderConfig.mockResolvedValue({
