@@ -57,6 +57,14 @@ describe('Providers (TDD)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockFetch.mockClear();
+    // Clear Octokit mocks
+    MockOctokit.mockClear();
+    mockIssues.listForRepo.mockClear();
+    mockIssues.get.mockClear();
+    mockIssues.create.mockClear();
+    mockIssues.update.mockClear();
+    mockIssues.createComment.mockClear(); // Keep this clear from earlier merges
+    mockPaginate.mockClear(); // Clear paginate mock
   });
 
   describe('JiraProvider', () => {
@@ -238,7 +246,11 @@ describe('Providers (TDD)', () => {
         },
       ];
 
+<<<<<<< HEAD
       mockPaginate.mockResolvedValue(mockResponse); // Use mockPaginate directly
+=======
+      mockPaginate.mockResolvedValue(mockResponse);
+>>>>>>> origin/feat/issue-5-agile-config
 
       const provider = new GitHubProvider(mockConfig);
       const tasks = await provider.getTasks();
@@ -256,8 +268,12 @@ describe('Providers (TDD)', () => {
           per_page: 100 // Add per_page expectation
         }
       );
-      expect(MockOctokit).toHaveBeenCalledWith({ auth: 'ghp_token' }); // Expect the constructor to be called
->>>>>>> feat/issue-9-refactor-statuses
+      expect(MockOctokit).toHaveBeenCalledWith({ auth: 'ghp_token' }); // Expect the constructor to be called=======
+          per_page: 100
+        }
+      );
+    });
+>>>>>>> origin/feat/issue-5-agile-config
 
     it('should create a task', async () => {
       mockConfig.getProviderConfig.mockResolvedValue({

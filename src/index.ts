@@ -34,6 +34,10 @@ export const server = new McpServer({
 // Integration Management
 registerManageConnections(server);
 
+// Agile Configuration
+import { registerManageAgileConfig } from './tools/manageAgileConfig.js';
+registerManageAgileConfig(server);
+
 // Core Tasks (Provider Aware)
 registerGetTasks(server);
 registerCreateTask(server);
