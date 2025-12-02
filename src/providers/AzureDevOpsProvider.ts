@@ -85,6 +85,11 @@ export class AzureDevOpsProvider implements ProjectProvider {
       createdAt: item.fields['System.CreatedDate'],
       updatedAt: item.fields['System.ChangedDate'],
       source: 'azure-devops',
+      tags: [],
+      comments: [],
+      checklists: [],
+      customFields: {},
+      blockedBy: []
     }));
   }
 
@@ -92,7 +97,7 @@ export class AzureDevOpsProvider implements ProjectProvider {
     await this.init();
     const type = input.type || 'Task'; // 'User Story', 'Bug', 'Feature'
     
-    const patchDocument = [
+    const patchDocument: Array<{ op: string; path: string; value: any }> = [
       { op: 'add', path: '/fields/System.Title', value: input.title },
       { op: 'add', path: '/fields/System.Description', value: input.description || '' },
     ];
@@ -129,18 +134,23 @@ export class AzureDevOpsProvider implements ProjectProvider {
       createdAt: item.fields['System.CreatedDate'],
       updatedAt: item.fields['System.ChangedDate'],
       source: 'azure-devops',
+      tags: [],
+      comments: [],
+      checklists: [],
+      customFields: {},
+      blockedBy: []
     };
   }
 
-  async getTaskById(id: string): Promise<Task | null> {
-    return null; // TODO
+  async getTaskById(id: string): Promise<Task | undefined> {
+    return undefined; // TODO
   }
   
-  async updateTask(id: string, input: any): Promise<Task> {
+  async updateTask(input: any): Promise<Task> {
     throw new Error('Not implemented');
   }
   
-  async deleteTask(id: string): Promise<void> {
+  async deleteTask(id: string): Promise<boolean> {
     throw new Error('Not implemented');
   }
 }

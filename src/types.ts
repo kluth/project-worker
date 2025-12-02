@@ -2,9 +2,9 @@
  * Shared type definitions for the Project Worker extension.
  */
 
-export type TaskStatus = 'todo' | 'in-progress' | 'blocked' | 'review' | 'done';
-export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
-export type TaskType = 'epic' | 'story' | 'task' | 'subtask' | 'bug';
+export type TaskStatus = 'todo' | 'in-progress' | 'blocked' | 'review' | 'done' | 'new' | 'active' | 'closed' | string; // Added string to allow loose mapping from providers
+export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent' | string; // Added string for flexibility
+export type TaskType = 'epic' | 'story' | 'task' | 'subtask' | 'bug' | 'item' | 'feature' | string; // Added 'item' for Monday, 'feature' for Azure
 
 export interface Comment {
   id: string;
@@ -84,7 +84,7 @@ export interface Task {
   description: string;
   status: TaskStatus;
   priority: TaskPriority;
-  type: TaskType; // New: Jira-style types
+  type: TaskType; 
   tags: string[];
   assignee?: string;
   dueDate?: string;
@@ -92,24 +92,28 @@ export interface Task {
   createdAt: string;
   updatedAt: string;
   
+  // Optional source field for tracking where the task came from (useful for multi-provider views)
+  source?: string;
+  url?: string;
+
   // Hierarchy
-  parentId?: string; // New: Subtasks/Epics
+  parentId?: string; 
 
   // Time Tracking
-  estimatedHours?: number; // New: Jira style
-  actualHours?: number;    // New: Jira style
+  estimatedHours?: number;
+  actualHours?: number;
 
   // Trello Style
-  checklists: Checklist[]; // New: Checklists
+  checklists: Checklist[];
 
   // GitHub Projects Style
-  customFields: Record<string, string | number | boolean>; // New: Custom meta data
+  customFields: Record<string, string | number | boolean>;
 
   // Super Power fields
   blockedBy: string[]; 
   sprintId?: string;   
   gitBranch?: string;
-  releaseId?: string; // New: Releases
+  releaseId?: string;
 }
 
 // Input types for tools

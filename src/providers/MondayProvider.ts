@@ -87,6 +87,11 @@ export class MondayProvider implements ProjectProvider {
         createdAt: item.created_at,
         updatedAt: item.updated_at,
         source: 'monday',
+        tags: [],
+        comments: [],
+        checklists: [],
+        customFields: {},
+        blockedBy: []
       };
     });
   }
@@ -131,18 +136,23 @@ export class MondayProvider implements ProjectProvider {
       createdAt: item.created_at,
       updatedAt: item.updated_at,
       source: 'monday',
+      tags: [],
+      comments: [],
+      checklists: [],
+      customFields: {},
+      blockedBy: []
     };
   }
 
-  async getTaskById(id: string): Promise<Task | null> {
-    return null; // TODO
+  async getTaskById(id: string): Promise<Task | undefined> {
+    return undefined; // TODO
   }
   
-  async updateTask(id: string, input: any): Promise<Task> {
+  async updateTask(input: any): Promise<Task> {
     throw new Error('Not implemented');
   }
   
-  async deleteTask(id: string): Promise<void> {
+  async deleteTask(id: string): Promise<boolean> {
     throw new Error('Not implemented');
   }
 }
