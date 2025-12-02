@@ -15,7 +15,6 @@ export interface ProviderConfig {
 
 export interface AgileMethodologyConfig {
   type: 'scrum' | 'kanban' | 'waterfall' | 'lean' | 'prince2' | 'custom';
-<<<<<<< HEAD
   settings?: Record<string, unknown>;
 }
 

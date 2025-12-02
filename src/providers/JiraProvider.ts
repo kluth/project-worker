@@ -56,7 +56,6 @@ export class JiraProvider implements ProjectProvider {
       Task: 'task',
       'Sub-task': 'subtask',
     };
-<<<<<<< HEAD
     // Map Jira status name directly to TaskStatus for flexibility
     let mappedStatus: TaskStatus;
     const jiraStatusName = fields.status.name.toLowerCase();

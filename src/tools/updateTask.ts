@@ -13,11 +13,9 @@ export function registerUpdateTask(server: McpServer): void {
         id: z.string().describe('The ID of the task to update'),
         title: z.string().optional(),
         description: z.string().optional(),
-<<<<<<< HEAD
         status: z.enum(['todo', 'in-progress', 'blocked', 'review', 'done', 'new', 'active', 'closed', 'backlog', 'ready for dev', 'in progress', 'qa', 'to do', 'doing', 'completed']).optional(),
         priority: z.enum(['low', 'medium', 'high', 'urgent']).optional(),
         type: z.enum(['epic', 'story', 'task', 'subtask', 'bug', 'item', 'feature', 'initiative', 'spike', 'request', 'change']).optional(),
-        assignee: z.string().optional(),
         tags: z.array(z.string()).optional(),
         dueDate: z.string().optional(),
         sprintId: z.string().optional(),
