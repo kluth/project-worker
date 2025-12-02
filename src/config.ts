@@ -1,6 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import os from 'os';
+import { Sprint, TaskStatus } from './types.js'; // Import Sprint and TaskStatus types
 
 const CONFIG_DIR = path.join(os.homedir(), '.gemini-project-worker');
 const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json');
@@ -12,14 +13,33 @@ export interface ProviderConfig {
   settings?: Record<string, any>; // e.g., { defaultRepo: 'owner/repo', jiraDomain: '...' }
 }
 
+export interface AgileMethodologyConfig {
+  type: 'scrum' | 'kanban' | 'waterfall' | 'lean' | 'prince2' | 'custom';
+  settings?: Record<string, any>; // e.g., { sprintLength: 2, wipLimit: 5 }
+}
+
+export interface KanbanBoardConfig {
+  boardName: string; // e.g., "Default Kanban Board"
+  wipLimits: Record<TaskStatus, number>; // e.g., { 'in progress': 3, 'review': 2 }
+}
+
 export interface AppConfig {
   activeProvider: 'local' | 'github' | 'jira' | 'trello' | 'asana' | 'azure-devops' | 'monday';
   providers: ProviderConfig[];
+  agileMethodology: AgileMethodologyConfig;
+  sprints: Sprint[]; // From Issue #6
+  kanbanBoards: KanbanBoardConfig[]; // New for Issue #7
 }
 
 const DEFAULT_CONFIG: AppConfig = {
   activeProvider: 'local',
-  providers: []
+  providers: [],
+  agileMethodology: { // Default agile methodology configuration
+    type: 'scrum',
+    settings: {}
+  },
+  sprints: [], // Default for sprints
+  kanbanBoards: [], // Default for kanban boards
 };
 
 export class ConfigManager {
@@ -40,6 +60,10 @@ export class ConfigManager {
     const content = await fs.readFile(CONFIG_FILE, 'utf-8');
     try {
       this.config = JSON.parse(content);
+      // Ensure new fields are initialized for existing configs
+      this.config.agileMethodology = this.config.agileMethodology || DEFAULT_CONFIG.agileMethodology;
+      this.config.sprints = this.config.sprints || DEFAULT_CONFIG.sprints;
+      this.config.kanbanBoards = this.config.kanbanBoards || DEFAULT_CONFIG.kanbanBoards;
       return this.config!;
     } catch {
       return DEFAULT_CONFIG;

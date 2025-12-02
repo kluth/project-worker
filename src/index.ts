@@ -56,6 +56,12 @@ registerManageDependencies(server);
 registerManageSprints(server);
 registerGitTools(server);
 
+// Kanban Management (New Tools)
+import { registerSetWipLimit } from './tools/setWipLimit.js';
+import { registerGetBoardStatus } from './tools/getBoardStatus.js';
+registerSetWipLimit(server);
+registerGetBoardStatus(server);
+
 // Enterprise Features
 registerManageReleases(server);
 registerLogWork(server);
