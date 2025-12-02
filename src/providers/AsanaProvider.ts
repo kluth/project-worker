@@ -1,6 +1,15 @@
-import { ProjectProvider } from './types.js';
-import { Task, CreateTaskInput, UpdateTaskInput, TaskFilter } from '../types.js';
-import { ConfigManager } from '../config.js';
+import type { ProjectProvider } from './types.js';
+import type { Task, CreateTaskInput, UpdateTaskInput, TaskFilter } from '../types.js';
+import type { ConfigManager } from '../config.js';
+
+interface AsanaTaskResponse {
+  gid: string;
+  name: string;
+  notes: string | null;
+  completed: boolean;
+  created_at: string;
+  // Add other relevant fields if needed
+}
 
 export class AsanaProvider implements ProjectProvider {
   name = 'asana';
@@ -21,12 +30,12 @@ export class AsanaProvider implements ProjectProvider {
 
   private getHeaders() {
     return {
-      'Authorization': `Bearer ${this.token}`,
-      'Accept': 'application/json'
+      Authorization: `Bearer ${this.token}`,
+      Accept: 'application/json',
     };
   }
 
-  private mapToTask(t: any): Task {
+  private mapToTask(t: AsanaTaskResponse): Task {
     return {
       id: t.gid,
       title: t.name,
@@ -41,17 +50,18 @@ export class AsanaProvider implements ProjectProvider {
       checklists: [],
       customFields: {},
       blockedBy: [],
-      gitBranch: undefined
+      gitBranch: undefined,
     };
   }
 
-  async getTasks(filter?: TaskFilter): Promise<Task[]> {
+  async getTasks(_filter?: TaskFilter): Promise<Task[]> {
+    // Renamed to _filter
     await this.init();
     const url = `https://app.asana.com/api/1.0/tasks?project=${this.projectId}&opt_fields=name,notes,completed,created_at`;
     const res = await fetch(url, { headers: this.getHeaders() });
     if (!res.ok) throw new Error(`Asana API Error: ${res.statusText}`);
     const data = await res.json();
-    return data.data.map((t: any) => this.mapToTask(t));
+    return data.data.map((t: AsanaTaskResponse) => this.mapToTask(t)); // Fixed 'any'
   }
 
   async getTaskById(id: string): Promise<Task | undefined> {
@@ -69,22 +79,23 @@ export class AsanaProvider implements ProjectProvider {
       data: {
         name: input.title,
         notes: input.description,
-        projects: [this.projectId]
-      }
+        projects: [this.projectId],
+      },
     };
-    
+
     const res = await fetch('https://app.asana.com/api/1.0/tasks', {
       method: 'POST',
       headers: { ...this.getHeaders(), 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
     });
-    
+
     if (!res.ok) throw new Error('Failed to create Asana task');
     const data = await res.json();
     return this.mapToTask(data.data);
   }
 
-  async updateTask(input: UpdateTaskInput): Promise<Task> {
+  async updateTask(_input: UpdateTaskInput): Promise<Task> {
+    // Renamed to _input
     throw new Error('Not implemented');
   }
 
@@ -92,12 +103,13 @@ export class AsanaProvider implements ProjectProvider {
     await this.init();
     const res = await fetch(`https://app.asana.com/api/1.0/tasks/${id}`, {
       method: 'DELETE',
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return res.ok;
   }
 
-  async addComment(taskId: string, content: string): Promise<Task> {
+  async addComment(_taskId: string, _content: string): Promise<Task> {
+    // Renamed to _taskId, _content
     throw new Error('Not implemented');
   }
 }

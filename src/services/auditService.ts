@@ -2,7 +2,13 @@ import { db } from '../db.js';
 import { randomUUID } from 'crypto';
 
 export class AuditService {
-  static async logChange(taskId: string, field: string, oldValue: any, newValue: any, changedBy: string = 'Gemini') {
+  static async logChange(
+    taskId: string,
+    field: string,
+    oldValue: unknown,
+    newValue: unknown,
+    changedBy: string = 'Gemini',
+  ): Promise<void> {
     // Don't log if values are identical
     if (JSON.stringify(oldValue) === JSON.stringify(newValue)) return;
 
@@ -13,7 +19,7 @@ export class AuditService {
       oldValue,
       newValue,
       changedBy,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 }

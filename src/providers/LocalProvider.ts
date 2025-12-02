@@ -1,22 +1,26 @@
-import { ProjectProvider } from './types.js';
-import { Task, CreateTaskInput, UpdateTaskInput, TaskFilter } from '../types.js';
+import type { ProjectProvider } from './types.js';
+import type { Task, CreateTaskInput, UpdateTaskInput, TaskFilter } from '../types.js';
 import { db } from '../db.js';
 import { randomUUID } from 'crypto';
-import { AuditService } from '../services/auditService.js';
 
 export class LocalProvider implements ProjectProvider {
   name = 'local';
 
   async getTasks(filter?: TaskFilter): Promise<Task[]> {
     let tasks = await db.getTasks();
-    
+
     if (filter) {
-      if (filter.status) tasks = tasks.filter(t => t.status === filter.status);
-      if (filter.priority) tasks = tasks.filter(t => t.priority === filter.priority);
-      if (filter.assignee) tasks = tasks.filter(t => t.assignee?.toLowerCase().includes(filter.assignee!.toLowerCase()));
+      if (filter.status) tasks = tasks.filter((t) => t.status === filter.status);
+      if (filter.priority) tasks = tasks.filter((t) => t.priority === filter.priority);
+      if (filter.assignee)
+        tasks = tasks.filter((t) =>
+          t.assignee?.toLowerCase().includes(filter.assignee.toLowerCase()),
+        );
       if (filter.search) {
         const term = filter.search.toLowerCase();
-        tasks = tasks.filter(t => t.title.toLowerCase().includes(term) || t.description.toLowerCase().includes(term));
+        tasks = tasks.filter(
+          (t) => t.title.toLowerCase().includes(term) || t.description.toLowerCase().includes(term),
+        );
       }
       // ... handle other filters
     }
@@ -46,7 +50,7 @@ export class LocalProvider implements ProjectProvider {
       customFields: {},
       blockedBy: [],
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
     };
     await db.addTask(newTask);
     return newTask;
@@ -58,10 +62,10 @@ export class LocalProvider implements ProjectProvider {
 
     const updated = { ...task, ...input, updatedAt: new Date().toISOString() };
     await db.updateTask(updated);
-    
+
     // In a full refactor, Audit logging might happen in the tool layer or here.
     // For now, we keep it simple as this mimics the old db logic.
-    
+
     return updated;
   }
 
@@ -77,13 +81,13 @@ export class LocalProvider implements ProjectProvider {
       id: randomUUID(),
       author: 'LocalUser', // TODO: Configurable user
       content,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
     task.comments.push(newComment);
     task.updatedAt = new Date().toISOString();
     await db.updateTask(task);
-    
+
     return task;
   }
 }

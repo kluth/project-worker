@@ -7,6 +7,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
+    "noUncheckedIndexedAccess": true, // Add for stricter type checking of indexed access
     "outDir": "./dist",
     "rootDir": "./src"
   },

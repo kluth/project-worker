@@ -1,8 +1,8 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { db } from '../db.js';
 
-export function registerDeleteTask(server: McpServer) {
+export function registerDeleteTask(server: McpServer): void {
   server.registerTool(
     'delete_task',
     {
@@ -13,7 +13,7 @@ export function registerDeleteTask(server: McpServer) {
     },
     async ({ id }) => {
       const success = await db.deleteTask(id);
-      
+
       if (!success) {
         return {
           isError: true,

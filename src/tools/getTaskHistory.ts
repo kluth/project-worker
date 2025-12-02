@@ -1,8 +1,8 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { db } from '../db.js';
 
-export function registerGetTaskHistory(server: McpServer) {
+export function registerGetTaskHistory(server: McpServer): void {
   server.registerTool(
     'get_task_history',
     {
@@ -13,9 +13,9 @@ export function registerGetTaskHistory(server: McpServer) {
     },
     async ({ taskId }) => {
       const logs = await db.getAuditLogsForTask(taskId);
-      
+
       if (logs.length === 0) {
-         return { content: [{ type: 'text', text: 'No history found for this task.' }] };
+        return { content: [{ type: 'text', text: 'No history found for this task.' }] };
       }
 
       return {

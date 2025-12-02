@@ -2,7 +2,16 @@
  * Shared type definitions for the Project Worker extension.
  */
 
-export type TaskStatus = 'todo' | 'in-progress' | 'blocked' | 'review' | 'done' | 'new' | 'active' | 'closed' | string; // Added string to allow loose mapping from providers
+export type TaskStatus =
+  | 'todo'
+  | 'in-progress'
+  | 'blocked'
+  | 'review'
+  | 'done'
+  | 'new'
+  | 'active'
+  | 'closed'
+  | string; // Added string to allow loose mapping from providers
 export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent' | string; // Added string for flexibility
 export type TaskType = 'epic' | 'story' | 'task' | 'subtask' | 'bug' | 'item' | 'feature' | string; // Added 'item' for Monday, 'feature' for Azure
 
@@ -17,8 +26,8 @@ export interface AuditLogEntry {
   id: string;
   taskId: string;
   field: string;
-  oldValue: any;
-  newValue: any;
+  oldValue: unknown; // Changed 'any' to 'unknown'
+  newValue: unknown; // Changed 'any' to 'unknown'
   changedBy: string;
   timestamp: string;
 }
@@ -54,7 +63,7 @@ export interface Checklist {
 
 export interface WikiPage {
   id: string;
-  slug: string; 
+  slug: string;
   title: string;
   content: string;
   tags: string[];
@@ -84,20 +93,20 @@ export interface Task {
   description: string;
   status: TaskStatus;
   priority: TaskPriority;
-  type: TaskType; 
+  type: TaskType;
   tags: string[];
   assignee?: string;
   dueDate?: string;
   comments: Comment[];
   createdAt: string;
   updatedAt: string;
-  
+
   // Optional source field for tracking where the task came from (useful for multi-provider views)
   source?: string;
   url?: string;
 
   // Hierarchy
-  parentId?: string; 
+  parentId?: string;
 
   // Time Tracking
   estimatedHours?: number;
@@ -110,8 +119,8 @@ export interface Task {
   customFields: Record<string, string | number | boolean>;
 
   // Super Power fields
-  blockedBy: string[]; 
-  sprintId?: string;   
+  blockedBy: string[];
+  sprintId?: string;
   gitBranch?: string;
   releaseId?: string;
 }
@@ -144,7 +153,7 @@ export interface UpdateTaskInput {
   tags?: string[];
   dueDate?: string;
   sprintId?: string;
-  blockedBy?: string[]; 
+  blockedBy?: string[];
   parentId?: string;
   releaseId?: string;
   estimatedHours?: number;
@@ -155,7 +164,7 @@ export interface TaskFilter {
   status?: TaskStatus;
   priority?: TaskPriority;
   assignee?: string;
-  search?: string; 
+  search?: string;
   tags?: string[];
   sprintId?: string;
   releaseId?: string;

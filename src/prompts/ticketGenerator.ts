@@ -1,13 +1,13 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 
-export function registerTicketGenerator(server: McpServer) {
+export function registerTicketGenerator(server: McpServer): void {
   server.registerPrompt(
     'ticket-generator',
     {
       title: 'Ticket Generator',
       description: 'Generate a structured project ticket based on a rough idea.',
-      argsSchema: { 
+      argsSchema: {
         type: z.enum(['feature', 'bug', 'chore']).describe('The type of ticket'),
         context: z.string().describe('The raw input or context for the ticket'),
       },

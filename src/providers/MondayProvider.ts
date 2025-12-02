@@ -1,10 +1,22 @@
-import { ProjectProvider } from './types.js';
-import { Task, CreateTaskInput, TaskFilter } from '../types.js';
-import { ConfigManager } from '../config.js';
+import type { ProjectProvider } from './types.js';
+import type { Task, CreateTaskInput, TaskFilter } from '../types.js';
+import type { ConfigManager } from '../config.js';
 
 interface MondayConfig {
   token: string;
   boardId: string;
+}
+
+interface MondayItemResponse {
+  id: string;
+  name: string;
+  created_at: string;
+  updated_at: string;
+  column_values: {
+    id: string;
+    text: string;
+    type: string;
+  }[];
 }
 
 export class MondayProvider implements ProjectProvider {
@@ -17,7 +29,7 @@ export class MondayProvider implements ProjectProvider {
   private getHeaders() {
     if (!this.config) throw new Error('Monday.com not configured');
     return {
-      'Authorization': this.config.token,
+      Authorization: this.config.token,
       'Content-Type': 'application/json',
     };
   }
@@ -25,7 +37,11 @@ export class MondayProvider implements ProjectProvider {
   private async init() {
     if (this.config) return;
     const providerConfig = await this.configManager.getProviderConfig('monday');
-    if (!providerConfig || !providerConfig.credentials?.token || !providerConfig.settings?.boardId) {
+    if (
+      !providerConfig ||
+      !providerConfig.credentials?.token ||
+      !providerConfig.settings?.boardId
+    ) {
       throw new Error('Monday.com not configured. Required: credentials.token, settings.boardId');
     }
     this.config = {
@@ -34,11 +50,12 @@ export class MondayProvider implements ProjectProvider {
     };
   }
 
-  async getTasks(filter: TaskFilter): Promise<Task[]> {
+  async getTasks(_filter: TaskFilter): Promise<Task[]> {
+    // Renamed filter to _filter
     await this.init();
     const query = `
       query {
-        boards (ids: [${this.config!.boardId}]) {
+        boards (ids: [${this.config.boardId}]) { // Removed !
           items_page {
             items {
               id
@@ -68,13 +85,16 @@ export class MondayProvider implements ProjectProvider {
 
     const data = await response.json();
     if (data.errors) {
-      throw new Error(`Monday.com GraphQL error: ${JSON.stringify(data.errors)}`);
+      throw new Error(`Monday.com GraphQL error: ${JSON.stringify(data.errors as unknown)}`); // Cast to unknown
     }
 
-    const items = data.data.boards[0]?.items_page?.items || [];
+    const items: MondayItemResponse[] = data.data.boards[0]?.items_page?.items || []; // Typed items
 
-    return items.map((item: any) => {
-      const statusCol = item.column_values.find((c: any) => c.type === 'status' || c.id.includes('status'));
+    return items.map((item: MondayItemResponse) => {
+      // Fixed 'any'
+      const statusCol = item.column_values.find(
+        (c) => c.type === 'status' || c.id.includes('status'),
+      );
       const status = statusCol ? statusCol.text : 'unknown';
 
       return {
@@ -91,7 +111,7 @@ export class MondayProvider implements ProjectProvider {
         comments: [],
         checklists: [],
         customFields: {},
-        blockedBy: []
+        blockedBy: [],
       };
     });
   }
@@ -100,7 +120,7 @@ export class MondayProvider implements ProjectProvider {
     await this.init();
     const query = `
       mutation {
-        create_item (board_id: ${this.config!.boardId}, item_name: "${input.title}") {
+        create_item (board_id: ${this.config.boardId}, item_name: "${input.title}") { // Removed !
           id
           name
           created_at
@@ -121,10 +141,10 @@ export class MondayProvider implements ProjectProvider {
 
     const data = await response.json();
     if (data.errors) {
-      throw new Error(`Monday.com GraphQL create error: ${JSON.stringify(data.errors)}`);
+      throw new Error(`Monday.com GraphQL create error: ${JSON.stringify(data.errors as unknown)}`); // Cast to unknown
     }
 
-    const item = data.data.create_item;
+    const item: MondayItemResponse = data.data.create_item; // Typed item
 
     return {
       id: item.id,
@@ -140,23 +160,27 @@ export class MondayProvider implements ProjectProvider {
       comments: [],
       checklists: [],
       customFields: {},
-      blockedBy: []
+      blockedBy: [],
     };
   }
 
-  async getTaskById(id: string): Promise<Task | undefined> {
+  async getTaskById(_id: string): Promise<Task | undefined> {
+    // Renamed id to _id
     return undefined; // TODO
   }
-  
-  async updateTask(input: any): Promise<Task> {
-    throw new Error('Not implemented');
-  }
-  
-  async deleteTask(id: string): Promise<boolean> {
+
+  async updateTask(_input: UpdateTaskInput): Promise<Task> {
+    // Renamed input to _input
     throw new Error('Not implemented');
   }
 
-  async addComment(taskId: string, content: string): Promise<Task> {
+  async deleteTask(_id: string): Promise<boolean> {
+    // Renamed id to _id
+    throw new Error('Not implemented');
+  }
+
+  async addComment(_taskId: string, _content: string): Promise<Task> {
+    // Renamed taskId, content
     throw new Error('Not implemented');
   }
 }

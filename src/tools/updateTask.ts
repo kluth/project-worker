@@ -1,10 +1,5 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { z } from 'zod';
-import { db } from '../db.js';
-import { UpdateTaskInput } from '../types.js';
-import { AuditService } from '../services/auditService.js';
-
-export function registerUpdateTask(server: McpServer) {
+export function registerUpdateTask(server: McpServer): void {
+  // Add void return type
   server.registerTool(
     'update_task',
     {
@@ -27,36 +22,59 @@ export function registerUpdateTask(server: McpServer) {
     },
     async (input: UpdateTaskInput) => {
       const task = await db.getTaskById(input.id);
-      
+
       if (!task) {
-        return { isError: true, content: [{ type: 'text', text: `Task with ID ${input.id} not found.` }] };
+        return {
+          isError: true,
+          content: [{ type: 'text', text: `Task with ID ${input.id} not found.` }],
+        };
       }
 
       const oldTask = { ...task };
       const updatedTask = {
         ...task,
         ...input,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       };
 
       // Log changes for specific fields
       const fieldsToTrack = [
-        'title', 'description', 'status', 'priority', 'assignee', 
-        'dueDate', 'sprintId', 'type', 'parentId', 'releaseId', 'estimatedHours'
+        'title',
+        'description',
+        'status',
+        'priority',
+        'assignee',
+        'dueDate',
+        'sprintId',
+        'type',
+        'parentId',
+        'releaseId',
+        'estimatedHours',
       ] as const;
-      
+
       for (const field of fieldsToTrack) {
         if (input[field] !== undefined) {
-          await AuditService.logChange(input.id, field, (oldTask as any)[field], (input as any)[field]);
+          const oldFieldValue = oldTask[field as keyof typeof oldTask]; // Type-safe access
+          const newFieldValue = input[field];
+
+          // Only log if the value actually changed
+          if (oldFieldValue !== newFieldValue) {
+            await AuditService.logChange(input.id, field, oldFieldValue, newFieldValue);
+          }
         }
       }
 
       if (input.tags) {
-         await AuditService.logChange(input.id, 'tags', oldTask.tags, input.tags);
+        // Compare tags as arrays
+        const oldTags = oldTask.tags || [];
+        const newTags = input.tags || [];
+        if (JSON.stringify(oldTags.sort()) !== JSON.stringify(newTags.sort())) {
+          await AuditService.logChange(input.id, 'tags', oldTags, newTags);
+        }
       }
 
       await db.updateTask(updatedTask);
-      
+
       return {
         content: [
           {
