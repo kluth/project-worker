@@ -1,8 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { db } from '../db.js';
-import { UpdateTaskInput } from '../types.js';
-import { AuditService } from '../services/auditService.js';
+import { ProviderFactory } from '../services/providerFactory.js';
+import { AuditService } from '../services/auditService.js'; // Import AuditService
+import { UpdateTaskInput, Task } from '../types.js'; // Import Task type
 
 export function registerUpdateTask(server: McpServer) {
   server.registerTool(
@@ -13,9 +13,9 @@ export function registerUpdateTask(server: McpServer) {
         id: z.string().describe('The ID of the task to update'),
         title: z.string().optional(),
         description: z.string().optional(),
-        status: z.enum(['todo', 'in-progress', 'blocked', 'review', 'done']).optional(),
+        status: z.enum(['todo', 'in-progress', 'blocked', 'review', 'done', 'new', 'active', 'closed']).optional(),
         priority: z.enum(['low', 'medium', 'high', 'urgent']).optional(),
-        type: z.enum(['epic', 'story', 'task', 'subtask', 'bug']).optional(),
+        type: z.enum(['epic', 'story', 'task', 'subtask', 'bug', 'item', 'feature']).optional(),
         assignee: z.string().optional(),
         tags: z.array(z.string()).optional(),
         dueDate: z.string().optional(),
@@ -23,48 +23,56 @@ export function registerUpdateTask(server: McpServer) {
         parentId: z.string().optional(),
         releaseId: z.string().optional(),
         estimatedHours: z.number().optional(),
+        source: z.string().optional().describe('The provider source (e.g. github, local)'),
       }).shape,
     },
-    async (input: UpdateTaskInput) => {
-      const task = await db.getTaskById(input.id);
+    async (input: UpdateTaskInput) => { // Use UpdateTaskInput for type safety
+      const provider = await ProviderFactory.getProvider(input.source);
       
-      if (!task) {
-        return { isError: true, content: [{ type: 'text', text: `Task with ID ${input.id} not found.` }] };
-      }
+      try {
+        const oldTask: Task | undefined = await provider.getTaskById(input.id); // Get old task for audit logging
 
-      const oldTask = { ...task };
-      const updatedTask = {
-        ...task,
-        ...input,
-        updatedAt: new Date().toISOString()
-      };
+        const updatedTask = await provider.updateTask(input);
 
-      // Log changes for specific fields
-      const fieldsToTrack = [
-        'title', 'description', 'status', 'priority', 'assignee', 
-        'dueDate', 'sprintId', 'type', 'parentId', 'releaseId', 'estimatedHours'
-      ] as const;
-      
-      for (const field of fieldsToTrack) {
-        if (input[field] !== undefined) {
-          await AuditService.logChange(input.id, field, (oldTask as any)[field], (input as any)[field]);
+        if (oldTask) {
+          // Audit logging
+          for (const key in input) {
+            if (Object.prototype.hasOwnProperty.call(input, key) && key !== 'id' && key !== 'source') {
+              const typedKey = key as keyof UpdateTaskInput;
+              const oldValue = (oldTask as any)[typedKey]; // Cast to any for dynamic access
+              const newValue = input[typedKey];
+
+              // Deep compare for arrays like tags, otherwise simple compare
+              if (Array.isArray(oldValue) && Array.isArray(newValue)) {
+                if (JSON.stringify(oldValue.sort()) !== JSON.stringify(newValue.sort())) {
+                  await AuditService.logChange(input.id, typedKey, oldValue, newValue);
+                }
+              } else if (oldValue !== newValue) {
+                await AuditService.logChange(input.id, typedKey, oldValue, newValue);
+              }
+            }
+          }
         }
-      }
 
-      if (input.tags) {
-         await AuditService.logChange(input.id, 'tags', oldTask.tags, input.tags);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(updatedTask, null, 2),
+            },
+          ],
+        };
+      } catch (error: any) { // Keep error: any for now as error types can be diverse
+        return {
+          isError: true,
+          content: [
+            {
+              type: 'text',
+              text: `Failed to update task: ${error.message}`,
+            },
+          ],
+        };
       }
-
-      await db.updateTask(updatedTask);
-      
-      return {
-        content: [
-          {
-            type: 'text',
-            text: JSON.stringify(updatedTask, null, 2),
-          },
-        ],
-      };
     },
   );
 }

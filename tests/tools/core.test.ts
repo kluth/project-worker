@@ -16,14 +16,11 @@ vi.mock('../../src/services/providerFactory.js', () => ({
   }
 }));
 
-// Mock DB for local tools
+// Mock DB for local tools (search_tasks still uses db directly)
 vi.mock('../../src/db.js', () => ({
   db: {
     getTasks: vi.fn(),
-    getTaskById: vi.fn(),
-    updateTask: vi.fn(),
-    deleteTask: vi.fn(),
-    addAuditLog: vi.fn() // update_task uses this
+    addAuditLog: vi.fn(), // Added mock for addAuditLog
   }
 }));
 
@@ -34,6 +31,7 @@ const mockProvider = {
   addComment: vi.fn(),
   updateTask: vi.fn(), 
   deleteTask: vi.fn(), 
+  getTaskById: vi.fn(), // Added getTaskById mock
 };
 
 // Mock Server
@@ -45,6 +43,24 @@ describe('Core Tools', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (ProviderFactory.getProvider as any).mockResolvedValue(mockProvider);
+    // Default mock for getTaskById so it doesn't break updateTask
+    mockProvider.getTaskById.mockResolvedValue({ 
+      id: '1', 
+      title: 'Original', 
+      description: 'Original description', 
+      status: 'todo',
+      priority: 'medium',
+      type: 'task',
+      assignee: 'someone',
+      tags: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      comments: [],
+      checklists: [],
+      customFields: {},
+      blockedBy: [],
+      gitBranch: undefined
+    }); 
   });
 
   describe('create_task', () => {
@@ -92,31 +108,31 @@ describe('Core Tools', () => {
   });
 
   describe('update_task', () => {
-    it('should register and call update_task', async () => {
+    it('should register and call update_task via provider', async () => {
       registerUpdateTask(mockServer as any);
       const handler = (mockServer.registerTool as any).mock.calls.find((c: any) => c[0] === 'update_task')[2];
       
-      // update_task uses db directly
-      (db.getTaskById as any).mockResolvedValue({ id: '1', title: 'Old', tags: [] });
+      mockProvider.updateTask.mockResolvedValue({ id: '1', title: 'Updated' });
       
-      const result = await handler({ id: '1', title: 'Updated' });
+      const result = await handler({ id: '1', title: 'Updated', source: 'local' });
       
-      expect(db.updateTask).toHaveBeenCalledWith(expect.objectContaining({ id: '1', title: 'Updated' }));
+      expect(ProviderFactory.getProvider).toHaveBeenCalledWith('local');
+      expect(mockProvider.updateTask).toHaveBeenCalledWith(expect.objectContaining({ id: '1', title: 'Updated' }));
       expect(JSON.parse(result.content[0].text).title).toBe('Updated');
     });
   });
 
   describe('delete_task', () => {
-    it('should register and call delete_task', async () => {
+    it('should register and call delete_task via provider', async () => {
       registerDeleteTask(mockServer as any);
       const handler = (mockServer.registerTool as any).mock.calls.find((c: any) => c[0] === 'delete_task')[2];
       
-      // delete_task uses db directly
-      (db.deleteTask as any).mockResolvedValue(true);
+      mockProvider.deleteTask.mockResolvedValue(true);
       
-      const result = await handler({ id: '1' });
+      const result = await handler({ id: '1', source: 'local' });
       
-      expect(db.deleteTask).toHaveBeenCalledWith('1');
+      expect(ProviderFactory.getProvider).toHaveBeenCalledWith('local');
+      expect(mockProvider.deleteTask).toHaveBeenCalledWith('1');
       expect(result.content[0].text).toContain('deleted');
     });
   });
@@ -126,7 +142,7 @@ describe('Core Tools', () => {
       registerSearchTasks(mockServer as any);
       const handler = (mockServer.registerTool as any).mock.calls.find((c: any) => c[0] === 'search_tasks')[2];
       
-      // search_tasks uses db.getTasks directly
+      // search_tasks still uses db.getTasks directly because it's a local-only capability currently
       (db.getTasks as any).mockResolvedValue([{ id: '1', title: 'Search Result', description: '', tags: [], comments: [] }]);
       
       const result = await handler({ query: 'Search' });

@@ -26,6 +26,7 @@ const { mockOctokit, mockIssues } = vi.hoisted(() => {
     get: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
+    createComment: vi.fn(), // Added mock for createComment
   };
 
   const mockOctokit = vi.fn(function() {
@@ -34,7 +35,15 @@ const { mockOctokit, mockIssues } = vi.hoisted(() => {
       rest: {
         issues: mockIssues,
       },
-      // Potentially other Octokit internals could be mocked here if needed
+      // Mock paginate
+      paginate: vi.fn().mockImplementation(async (route, options) => {
+          // If route is listForRepo, return mock data
+          if (route === mockIssues.listForRepo) {
+              const response = await route(options);
+              return response.data;
+          }
+          return [];
+      }),
     };
   });
   return { mockOctokit, mockIssues };
@@ -202,6 +211,7 @@ describe('Providers (TDD)', () => {
       mockIssues.get.mockClear();
       mockIssues.create.mockClear();
       mockIssues.update.mockClear();
+      mockIssues.createComment.mockClear();
     });
 
     it('should fetch and map tasks correctly', async () => {
@@ -234,11 +244,14 @@ describe('Providers (TDD)', () => {
       expect(tasks[0].title).toBe('GitHub Issue');
       expect(tasks[0].assignee).toBe('octocat');
       expect(tasks[0].tags).toEqual(['bug']);
-      expect(mockIssues.listForRepo).toHaveBeenCalledWith({
+      // listForRepo is called via paginate, check args passed to paginate if possible,
+      // or just check paginate called.
+      // Since we mocked paginate to call listForRepo, listForRepo SHOULD be called.
+      expect(mockIssues.listForRepo).toHaveBeenCalledWith(expect.objectContaining({
         owner: 'octocat',
         repo: 'hello-world',
         state: 'open'
-      });
+      }));
       expect(mockOctokit).toHaveBeenCalledWith({ auth: 'ghp_token' });
     });
 
