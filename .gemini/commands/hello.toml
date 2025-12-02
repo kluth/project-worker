@@ -1,0 +1,2 @@
+description = "A friendly greeting"
+content = "Hello! I am a custom command in your Gemini extension. How can I help you today?"
