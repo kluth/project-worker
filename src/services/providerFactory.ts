@@ -4,6 +4,8 @@ import { GitHubProvider } from '../providers/GitHubProvider.js';
 import { JiraProvider } from '../providers/JiraProvider.js';
 import { TrelloProvider } from '../providers/TrelloProvider.js';
 import { AsanaProvider } from '../providers/AsanaProvider.js';
+import { AzureDevOpsProvider } from '../providers/AzureDevOpsProvider.js';
+import { MondayProvider } from '../providers/MondayProvider.js';
 import { configManager } from '../config.js';
 
 export class ProviderFactory {
@@ -15,6 +17,15 @@ export class ProviderFactory {
 
     if (this.instances.has(target)) {
       return this.instances.get(target)!;
+    }
+
+    // Validate that the provider is configured before trying to instantiate it,
+    // except for local which is always valid.
+    if (target !== 'local') {
+        const providerConfig = await configManager.getProviderConfig(target);
+        if (!providerConfig) {
+            throw new Error(`Provider "${target}" is not configured.`);
+        }
     }
 
     let provider: ProjectProvider;
@@ -32,10 +43,17 @@ export class ProviderFactory {
       case 'asana':
         provider = new AsanaProvider(configManager);
         break;
+      case 'azure-devops':
+        provider = new AzureDevOpsProvider(configManager);
+        break;
+      case 'monday':
+        provider = new MondayProvider(configManager);
+        break;
       case 'local':
-      default:
         provider = new LocalProvider();
         break;
+      default:
+        throw new Error(`Unknown provider: ${target}`);
     }
 
     this.instances.set(target, provider);

@@ -2,7 +2,9 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { JiraProvider } from '../src/providers/JiraProvider.js';
 import { TrelloProvider } from '../src/providers/TrelloProvider.js';
 import { AsanaProvider } from '../src/providers/AsanaProvider.js';
-import { GitHubProvider } from '../src/providers/GitHubProvider.js'; // Added
+import { GitHubProvider } from '../src/providers/GitHubProvider.js';
+import { AzureDevOpsProvider } from '../src/providers/AzureDevOpsProvider.js';
+import { MondayProvider } from '../src/providers/MondayProvider.js';
 import { ConfigManager } from '../src/config.js';
 
 // Mock ConfigManager
@@ -280,32 +282,21 @@ describe('Providers (TDD)', () => {
         settings: { repo: 'octocat/hello-world' }
       });
 
-            mockIssues.update.mockResolvedValue({
-
-              data: {
-
-                number: 1,
-
-                title: 'Closed Issue',
-
-                body: '',
-
-                state: 'closed',
-
-                assignee: null,
-
-                labels: [], // Provide an empty array for labels
-
-                created_at: '2024-01-01T00:00:00Z',
-
-                updated_at: '2024-01-01T00:00:00Z',
-
-              }
-
-            });
+      mockIssues.update.mockResolvedValue({
+        data: {
+          number: 1,
+          title: 'Closed Issue',
+          body: '',
+          state: 'closed',
+          assignee: null,
+          labels: [],
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-01T00:00:00Z',
+        }
+      });
 
       const provider = new GitHubProvider(mockConfig as any);
-      const result = await provider.deleteTask('1'); // issue number
+      const result = await provider.deleteTask('1'); 
 
       expect(result).toBe(true);
       expect(mockIssues.update).toHaveBeenCalledWith({
@@ -314,6 +305,152 @@ describe('Providers (TDD)', () => {
         issue_number: 1,
         state: 'closed'
       });
+    });
+  });
+
+  describe('AzureDevOpsProvider', () => {
+    it('should fetch tasks via WIQL and details', async () => {
+      mockConfig.getProviderConfig.mockResolvedValue({
+        provider: 'azure-devops',
+        credentials: { token: 'pat' },
+        settings: { organization: 'org', project: 'proj' }
+      });
+
+      // Mock WIQL response
+      (global.fetch as any)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ workItems: [{ id: 100 }] })
+        })
+        // Mock Details response
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            value: [{
+              id: 100,
+              fields: {
+                'System.Title': 'Azure Task',
+                'System.State': 'To Do',
+                'System.Description': 'Desc',
+                'System.CreatedDate': '2024-01-01'
+              }
+            }]
+          })
+        });
+
+      const provider = new AzureDevOpsProvider(mockConfig as any);
+      const tasks = await provider.getTasks({} as any);
+
+      expect(tasks).toHaveLength(1);
+      expect(tasks[0].id).toBe('100');
+      expect(tasks[0].title).toBe('Azure Task');
+      expect(global.fetch).toHaveBeenCalledTimes(2);
+      expect(global.fetch).toHaveBeenNthCalledWith(1, 
+        expect.stringContaining('_apis/wit/wiql'), 
+        expect.anything()
+      );
+    });
+
+    it('should create a task', async () => {
+      mockConfig.getProviderConfig.mockResolvedValue({
+        provider: 'azure-devops',
+        credentials: { token: 'pat' },
+        settings: { organization: 'org', project: 'proj' }
+      });
+
+      (global.fetch as any).mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          id: 101,
+          fields: {
+            'System.Title': 'New Azure Item',
+            'System.State': 'New',
+            'System.Description': '',
+            'System.WorkItemType': 'Task',
+            'System.CreatedDate': '2024-01-01'
+          }
+        })
+      });
+
+      const provider = new AzureDevOpsProvider(mockConfig as any);
+      const task = await provider.createTask({ title: 'New Azure Item' });
+
+      expect(task.id).toBe('101');
+      expect(task.title).toBe('New Azure Item');
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('_apis/wit/workitems/$Task'),
+        expect.objectContaining({ method: 'POST' })
+      );
+    });
+  });
+
+  describe('MondayProvider', () => {
+    it('should fetch items via GraphQL', async () => {
+      mockConfig.getProviderConfig.mockResolvedValue({
+        provider: 'monday',
+        credentials: { token: 'token' },
+        settings: { boardId: '123' }
+      });
+
+      const mockResponse = {
+        data: {
+          boards: [{
+            items_page: {
+              items: [{
+                id: 'item-1',
+                name: 'Monday Item',
+                created_at: '2024-01-01',
+                column_values: [{ type: 'status', text: 'Working on it' }]
+              }]
+            }
+          }]
+        }
+      };
+
+      (global.fetch as any).mockResolvedValue({
+        ok: true,
+        json: async () => mockResponse
+      });
+
+      const provider = new MondayProvider(mockConfig as any);
+      const tasks = await provider.getTasks({} as any);
+
+      expect(tasks).toHaveLength(1);
+      expect(tasks[0].id).toBe('item-1');
+      expect(tasks[0].status).toBe('Working on it');
+      expect(global.fetch).toHaveBeenCalledWith(
+        'https://api.monday.com/v2',
+        expect.objectContaining({ method: 'POST' })
+      );
+    });
+
+    it('should create item via GraphQL', async () => {
+      mockConfig.getProviderConfig.mockResolvedValue({
+        provider: 'monday',
+        credentials: { token: 'token' },
+        settings: { boardId: '123' }
+      });
+
+      const mockResponse = {
+        data: {
+          create_item: {
+            id: 'item-2',
+            name: 'New Item',
+            created_at: '2024-01-01'
+          }
+        }
+      };
+
+      (global.fetch as any).mockResolvedValue({
+        ok: true,
+        json: async () => mockResponse
+      });
+
+      const provider = new MondayProvider(mockConfig as any);
+      const task = await provider.createTask({ title: 'New Item' });
+
+      expect(task.id).toBe('item-2');
+      expect(task.title).toBe('New Item');
     });
   });
 });

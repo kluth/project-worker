@@ -6,14 +6,14 @@ const CONFIG_DIR = path.join(os.homedir(), '.gemini-project-worker');
 const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json');
 
 export interface ProviderConfig {
-  provider: 'github' | 'jira' | 'trello' | 'asana' | 'azure';
+  provider: 'github' | 'jira' | 'trello' | 'asana' | 'azure-devops' | 'monday';
   enabled: boolean;
   credentials: Record<string, string>; // e.g., { apiKey: '...', email: '...' }
   settings?: Record<string, any>; // e.g., { defaultRepo: 'owner/repo', jiraDomain: '...' }
 }
 
 export interface AppConfig {
-  activeProvider: 'local' | 'github' | 'jira' | 'trello' | 'asana' | 'azure';
+  activeProvider: 'local' | 'github' | 'jira' | 'trello' | 'asana' | 'azure-devops' | 'monday';
   providers: ProviderConfig[];
 }
 
