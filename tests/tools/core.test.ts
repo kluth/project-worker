@@ -20,6 +20,7 @@ vi.mock('../../src/services/providerFactory.js', () => ({
 vi.mock('../../src/db.js', () => ({
   db: {
     getTasks: vi.fn(),
+    addAuditLog: vi.fn(), // Added mock for addAuditLog
   }
 }));
 
@@ -30,6 +31,7 @@ const mockProvider = {
   addComment: vi.fn(),
   updateTask: vi.fn(), 
   deleteTask: vi.fn(), 
+  getTaskById: vi.fn(), // Added getTaskById mock
 };
 
 // Mock Server
@@ -41,6 +43,24 @@ describe('Core Tools', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (ProviderFactory.getProvider as any).mockResolvedValue(mockProvider);
+    // Default mock for getTaskById so it doesn't break updateTask
+    mockProvider.getTaskById.mockResolvedValue({ 
+      id: '1', 
+      title: 'Original', 
+      description: 'Original description', 
+      status: 'todo',
+      priority: 'medium',
+      type: 'task',
+      assignee: 'someone',
+      tags: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      comments: [],
+      checklists: [],
+      customFields: {},
+      blockedBy: [],
+      gitBranch: undefined
+    }); 
   });
 
   describe('create_task', () => {

@@ -1,7 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { ProviderFactory } from '../services/providerFactory.js';
-import { UpdateTaskInput } from '../types.js';
+import { AuditService } from '../services/auditService.js'; // Import AuditService
+import { UpdateTaskInput, Task } from '../types.js'; // Import Task type
 
 export function registerUpdateTask(server: McpServer) {
   server.registerTool(
@@ -25,11 +26,34 @@ export function registerUpdateTask(server: McpServer) {
         source: z.string().optional().describe('The provider source (e.g. github, local)'),
       }).shape,
     },
-    async (input: any) => {
+    async (input: UpdateTaskInput) => { // Use UpdateTaskInput for type safety
       const provider = await ProviderFactory.getProvider(input.source);
       
       try {
+        const oldTask: Task | undefined = await provider.getTaskById(input.id); // Get old task for audit logging
+
         const updatedTask = await provider.updateTask(input);
+
+        if (oldTask) {
+          // Audit logging
+          for (const key in input) {
+            if (Object.prototype.hasOwnProperty.call(input, key) && key !== 'id' && key !== 'source') {
+              const typedKey = key as keyof UpdateTaskInput;
+              const oldValue = (oldTask as any)[typedKey]; // Cast to any for dynamic access
+              const newValue = input[typedKey];
+
+              // Deep compare for arrays like tags, otherwise simple compare
+              if (Array.isArray(oldValue) && Array.isArray(newValue)) {
+                if (JSON.stringify(oldValue.sort()) !== JSON.stringify(newValue.sort())) {
+                  await AuditService.logChange(input.id, typedKey, oldValue, newValue);
+                }
+              } else if (oldValue !== newValue) {
+                await AuditService.logChange(input.id, typedKey, oldValue, newValue);
+              }
+            }
+          }
+        }
+
         return {
           content: [
             {
@@ -38,7 +62,7 @@ export function registerUpdateTask(server: McpServer) {
             },
           ],
         };
-      } catch (error: any) {
+      } catch (error: any) { // Keep error: any for now as error types can be diverse
         return {
           isError: true,
           content: [
