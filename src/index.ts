@@ -62,6 +62,12 @@ import { registerGetEvents } from './tools/getEvents.js';
 registerScheduleEvent(server);
 registerGetEvents(server);
 
+// Kanban Management (New Tools)
+import { registerSetWipLimit } from './tools/setWipLimit.js';
+import { registerGetBoardStatus } from './tools/getBoardStatus.js';
+registerSetWipLimit(server);
+registerGetBoardStatus(server);
+
 // Enterprise Features
 registerManageReleases(server);
 registerLogWork(server);

@@ -5,6 +5,7 @@ import { AsanaProvider } from '../src/providers/AsanaProvider.js';
 import { GitHubProvider } from '../src/providers/GitHubProvider.js';
 import { AzureDevOpsProvider } from '../src/providers/AzureDevOpsProvider.js';
 import { MondayProvider } from '../src/providers/MondayProvider.js';
+<<<<<<< HEAD
 import type { ConfigManager } from '../src/config.js';
 import type { TaskFilter } from '../src/types.js';
 import type { Octokit } from '@octokit/rest';
@@ -24,8 +25,7 @@ const { mockFetch } = vi.hoisted(() => {
 });
 global.fetch = mockFetch;
 
-// Mock Octokit
-const { mockOctokit, mockIssues } = vi.hoisted(() => {
+const { mockIssues, mockPaginate, MockOctokit } = vi.hoisted(() => {
   const mockIssues: Partial<Octokit['rest']['issues']> = {
     listForRepo: vi.fn(),
     get: vi.fn(),
@@ -34,28 +34,25 @@ const { mockOctokit, mockIssues } = vi.hoisted(() => {
     createComment: vi.fn(),
   };
 
-  const mockOctokit = vi.fn(function() {
-    // This is the actual instance that GitHubProvider will get
-    return {
-      rest: {
-        issues: mockIssues,
-      },
-      // Mock paginate
-      paginate: vi.fn().mockImplementation(async (route, options) => {
-          // If route is listForRepo, return mock data
-          if (route === mockIssues.listForRepo) {
-              const response = await route(options);
-              return response.data;
-          }
-          return [];
-      }),
-    };
+  const mockPaginate = vi.fn();
+
+  // Define the instance that our mocked Octokit constructor will return
+  const mockOctokitInstance = {
+    rest: { issues: mockIssues },
+    paginate: mockPaginate,
+  };
+
+  // Mock the Octokit class constructor
+  const MockOctokit = vi.fn(function () { // Use a regular function for a mock constructor
+    return mockOctokitInstance;
   });
-  return { mockOctokit, mockIssues };
+
+  return { mockIssues, mockPaginate, MockOctokit };
 });
 
+
 vi.mock('@octokit/rest', () => ({
-  Octokit: mockOctokit,
+  Octokit: MockOctokit,
 }));
 
 describe('Providers (TDD)', () => {
@@ -192,6 +189,7 @@ describe('Providers (TDD)', () => {
         data: [{ gid: 'task1', name: 'Asana Task', notes: 'Desc', completed: false }],
       };
 
+<<<<<<< HEAD
       (global.fetch as vi.Mock).mockResolvedValue({ ok: true, json: async () => mockResponse });
 
       const provider = new AsanaProvider(mockConfig);
@@ -213,12 +211,14 @@ describe('Providers (TDD)', () => {
     // Temporarily disabled due to persistent Vitest mocking issues with Octokit.paginate.
     // This should be re-enabled and fixed in a dedicated issue (e.g., #GH_MOCK_FIX).
     beforeEach(() => {
-      mockOctokit.mockClear();
+      MockOctokit.mockClear(); // Clear the mocked constructor
       mockIssues.listForRepo.mockClear();
       mockIssues.get.mockClear();
       mockIssues.create.mockClear();
       mockIssues.update.mockClear();
+<<<<<<< HEAD
       mockIssues.createComment.mockClear();
+      mockPaginate.mockClear(); // Clear paginate mock
     });
 
     it('should fetch and map tasks correctly', async () => {
@@ -241,7 +241,7 @@ describe('Providers (TDD)', () => {
         },
       ];
 
-      mockIssues.listForRepo.mockResolvedValue({ data: mockResponse });
+      mockPaginate.mockResolvedValue(mockResponse); // Use mockPaginate directly
 
       const provider = new GitHubProvider(mockConfig);
       const tasks = await provider.getTasks();
@@ -251,12 +251,17 @@ describe('Providers (TDD)', () => {
       expect(tasks[0].title).toBe('GitHub Issue');
       expect(tasks[0].assignee).toBe('octocat');
       expect(tasks[0].tags).toEqual(['bug']);
-      expect(mockIssues.listForRepo).toHaveBeenCalledWith(expect.objectContaining({
-        owner: 'octocat',
-        repo: 'hello-world',
-        state: 'open'
-      }));
-      expect(mockOctokit).toHaveBeenCalledWith({ auth: 'ghp_token' });
+<<<<<<< HEAD
+      expect(mockPaginate).toHaveBeenCalledWith( // Expect paginate to be called
+        mockIssues.listForRepo, // Use mockIssues.listForRepo directly
+        {
+          owner: 'octocat',
+          repo: 'hello-world',
+          state: 'open',
+          per_page: 100 // Add per_page expectation
+        }
+      );
+      expect(MockOctokit).toHaveBeenCalledWith({ auth: 'ghp_token' }); // Expect the constructor to be called
     });
 
     it('should create a task', async () => {

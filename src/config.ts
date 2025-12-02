@@ -57,7 +57,6 @@ export class ConfigManager {
     try {
       this.config = JSON.parse(content);
       // Ensure new fields are initialized for existing configs
-<<<<<<< HEAD
       this.config.agileMethodology =
         this.config.agileMethodology || DEFAULT_CONFIG.agileMethodology;
       this.config.sprints = this.config.sprints || DEFAULT_CONFIG.sprints;
