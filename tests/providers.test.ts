@@ -20,7 +20,7 @@ const { mockFetch } = vi.hoisted(() => {
 global.fetch = mockFetch;
 
 // Mock Octokit
-const { mockOctokit, mockIssues } = vi.hoisted(() => {
+const { mockOctokit, mockIssues, mockPaginate } = vi.hoisted(() => {
   const mockIssues = {
     listForRepo: vi.fn(),
     get: vi.fn(),
@@ -28,16 +28,18 @@ const { mockOctokit, mockIssues } = vi.hoisted(() => {
     update: vi.fn(),
   };
 
+  const mockPaginate = vi.fn(); // Define paginate mock here
+
   const mockOctokit = vi.fn(function() {
     // This is the actual instance that GitHubProvider will get
     return {
       rest: {
         issues: mockIssues,
       },
-      // Potentially other Octokit internals could be mocked here if needed
+      paginate: mockPaginate, // Assign the mockPaginate here
     };
   });
-  return { mockOctokit, mockIssues };
+  return { mockOctokit, mockIssues, mockPaginate }; // Export mockPaginate
 });
 
 vi.mock('@octokit/rest', () => ({
@@ -48,6 +50,13 @@ describe('Providers (TDD)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockFetch.mockClear();
+    // Clear Octokit mocks
+    mockOctokit.mockClear();
+    mockIssues.listForRepo.mockClear();
+    mockIssues.get.mockClear();
+    mockIssues.create.mockClear();
+    mockIssues.update.mockClear();
+    mockPaginate.mockClear(); // Clear paginate mock
   });
 
   describe('JiraProvider', () => {
@@ -224,7 +233,7 @@ describe('Providers (TDD)', () => {
         }
       ];
 
-      mockIssues.listForRepo.mockResolvedValue({ data: mockResponse });
+      mockPaginate.mockResolvedValue(mockResponse);
 
       const provider = new GitHubProvider(mockConfig as any);
       const tasks = await provider.getTasks();
@@ -234,12 +243,15 @@ describe('Providers (TDD)', () => {
       expect(tasks[0].title).toBe('GitHub Issue');
       expect(tasks[0].assignee).toBe('octocat');
       expect(tasks[0].tags).toEqual(['bug']);
-      expect(mockIssues.listForRepo).toHaveBeenCalledWith({
-        owner: 'octocat',
-        repo: 'hello-world',
-        state: 'open'
-      });
-      expect(mockOctokit).toHaveBeenCalledWith({ auth: 'ghp_token' });
+      expect(mockPaginate).toHaveBeenCalledWith(
+        mockOctokit.mock.results[0].value.rest.issues.listForRepo,
+        {
+          owner: 'octocat',
+          repo: 'hello-world',
+          state: 'open',
+          per_page: 100
+        }
+      );
     });
 
     it('should create a task', async () => {

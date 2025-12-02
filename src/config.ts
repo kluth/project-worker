@@ -12,14 +12,24 @@ export interface ProviderConfig {
   settings?: Record<string, any>; // e.g., { defaultRepo: 'owner/repo', jiraDomain: '...' }
 }
 
+export interface AgileMethodologyConfig {
+  type: 'scrum' | 'kanban' | 'waterfall' | 'lean' | 'prince2' | 'custom';
+  settings?: Record<string, any>; // e.g., { sprintLength: 2, wipLimit: 5 }
+}
+
 export interface AppConfig {
   activeProvider: 'local' | 'github' | 'jira' | 'trello' | 'asana' | 'azure-devops' | 'monday';
   providers: ProviderConfig[];
+  agileMethodology?: AgileMethodologyConfig; // New field
 }
 
 const DEFAULT_CONFIG: AppConfig = {
   activeProvider: 'local',
-  providers: []
+  providers: [],
+  agileMethodology: { // Default agile methodology configuration
+    type: 'scrum',
+    settings: {}
+  }
 };
 
 export class ConfigManager {
