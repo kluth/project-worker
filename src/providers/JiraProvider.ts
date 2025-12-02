@@ -41,11 +41,33 @@ export class JiraProvider implements ProjectProvider {
       'Sub-task': 'subtask'
     };
     
+    // Map Jira status name directly to TaskStatus for flexibility
+    let mappedStatus: TaskStatus;
+    const jiraStatusName = fields.status.name.toLowerCase();
+
+    if (jiraStatusName === 'done' || jiraStatusName === 'closed' || jiraStatusName === 'completed') {
+      mappedStatus = 'done';
+    } else if (jiraStatusName.includes('in progress')) {
+      mappedStatus = 'in-progress';
+    } else if (jiraStatusName.includes('to do')) {
+      mappedStatus = 'todo';
+    } else if (jiraStatusName.includes('backlog')) {
+      mappedStatus = 'backlog';
+    } else if (jiraStatusName.includes('review')) {
+      mappedStatus = 'review';
+    } else if (jiraStatusName.includes('qa')) {
+      mappedStatus = 'qa';
+    } else if (jiraStatusName.includes('ready for dev')) {
+      mappedStatus = 'ready for dev';
+    } else {
+      mappedStatus = jiraStatusName; // Fallback to native Jira status
+    }
+    
     return {
       id: issue.key,
       title: fields.summary,
-      description: fields.description || '', // Jira description can be complex ADF, simplified here
-      status: fields.status.name === 'Done' ? 'done' : 'todo', // Simplified
+      description: fields.description || '',
+      status: mappedStatus,
       priority: 'medium', // Need mapping logic
       type: typeMap[fields.issuetype.name] || 'task',
       assignee: fields.assignee?.displayName,
