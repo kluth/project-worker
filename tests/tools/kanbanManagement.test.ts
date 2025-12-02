@@ -1,10 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { registerSetWipLimit } from '../../src/tools/setWipLimit.js';
 import { registerGetBoardStatus } from '../../src/tools/getBoardStatus.js';
 import type { AppConfig, KanbanBoardConfig } from '../../src/config.js';
 import { configManager } from '../../src/config.js';
-import { ProviderFactory } from '../../src/services/providerFactory.js';
 import type { Task } from '../../src/types.js';
 
 // Mock configManager

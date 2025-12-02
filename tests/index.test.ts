@@ -25,7 +25,6 @@ const {
   MockMcpServer,
   mockRegisterTool,
   mockRegisterPrompt,
-  mockConnect,
   dbMocks,
   mockConfigManager,
   mockExec,
