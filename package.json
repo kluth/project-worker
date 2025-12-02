@@ -1,0 +1,58 @@
+{
+  "name": "project-worker",
+  "version": "1.0.0",
+  "description": "Gemini CLI extension that provides a lightweight MCP server to integrate with any popular project management tool (Jira, Trello, Asana, GitHub Projects, Azure Boards, etc).",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --coverage",
+    "prepare": "npm run build",
+    "clean": "rm -rf dist",
+    "lint": "eslint . --ext .ts,.js",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.25",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "@vitest/coverage-v8": "^4.0.14",
+    "eslint": "^8.50.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "~5.4.5",
+    "vitest": "^4.0.14"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.23.0",
+    "@octokit/rest": "^22.0.1",
+    "octokit": "^5.0.5",
+    "zod": "^3.22.4"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "url": "git+https://github.com/kluth/project-worker.git",
+    "type": "git"
+  },
+  "keywords": [
+    "mcp",
+    "gemini",
+    "project-management",
+    "integration",
+    "typescript"
+  ],
+  "author": "Matthias Kluth <kluthmatthias@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/kluth/project-worker/issues"
+  },
+  "homepage": "https://github.com/kluth/project-worker#readme"
+}

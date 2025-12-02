@@ -1,0 +1,11 @@
+{
+  "name": "project-worker",
+  "version": "1.0.0",
+  "mcpServers": {
+    "nodeServer": {
+      "command": "node",
+      "args": ["${extensionPath}/dist/index.js"],
+      "cwd": "${extensionPath}"
+    }
+  }
+}
