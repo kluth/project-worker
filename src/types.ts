@@ -348,3 +348,25 @@ export interface RetroAction {
   completedAt?: string;
   notes?: string;
 }
+
+// Meeting management types
+export interface MeetingNote {
+  id: string;
+  content: string;
+  author?: string;
+  timestamp?: string;
+  actionItem?: boolean;
+  createdAt: string;
+}
+
+export interface Meeting {
+  id: string;
+  topic: string;
+  attendees: string[];
+  agenda: string[];
+  location?: string;
+  scheduledFor?: string;
+  notes: MeetingNote[];
+  summary?: string;
+  createdAt: string;
+}

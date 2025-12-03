@@ -112,6 +112,14 @@ registerStartRetrospective(server);
 registerSubmitFeedback(server);
 registerTrackRetroActions(server);
 
+// Meeting Management Tools (Issue #16)
+import { registerCreateMeeting } from './tools/createMeeting.js';
+import { registerAddMeetingNote } from './tools/addMeetingNote.js';
+import { registerSummarizeMeeting } from './tools/summarizeMeeting.js';
+registerCreateMeeting(server);
+registerAddMeetingNote(server);
+registerSummarizeMeeting(server);
+
 // Enterprise Features
 registerManageReleases(server);
 registerLogWork(server);

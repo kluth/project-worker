@@ -14,6 +14,7 @@ import type {
   Prince2Organization,
   Retrospective,
   RetroAction,
+  Meeting,
 } from './types.js'; // Import agile methodology types
 
 const CONFIG_DIR = path.join(os.homedir(), '.gemini-project-worker');
@@ -52,6 +53,7 @@ export interface AppConfig {
   prince2Organization?: Prince2Organization; // From Issue #13
   retrospectives: Retrospective[]; // From Issue #15
   retroActions: RetroAction[]; // From Issue #15
+  meetings: Meeting[]; // From Issue #16
 }
 
 const DEFAULT_CONFIG: AppConfig = {
@@ -71,6 +73,7 @@ const DEFAULT_CONFIG: AppConfig = {
   pdcaCycles: [], // Default for PDCA cycles
   retrospectives: [], // Default for retrospectives
   retroActions: [], // Default for retro actions
+  meetings: [], // Default for meetings
 };
 
 export class ConfigManager {
@@ -103,6 +106,7 @@ export class ConfigManager {
       parsedConfig.pdcaCycles = parsedConfig.pdcaCycles || DEFAULT_CONFIG.pdcaCycles;
       parsedConfig.retrospectives = parsedConfig.retrospectives || DEFAULT_CONFIG.retrospectives;
       parsedConfig.retroActions = parsedConfig.retroActions || DEFAULT_CONFIG.retroActions;
+      parsedConfig.meetings = parsedConfig.meetings || DEFAULT_CONFIG.meetings;
       this.config = parsedConfig; // Assign to this.config after ensuring it's fully initialized
       return parsedConfig;
     } catch (e: unknown) {
