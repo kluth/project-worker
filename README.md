@@ -4,11 +4,11 @@ Welcome to the **Gemini Project Worker**, a super powerful and autonomously work
 
 ## 📚 Documentation
 
-*   **[🚀 Getting Started Guide](docs/GETTING_STARTED.md)**: The step-by-step tutorial to get you up and running in minutes.
-*   **[🛠️ Tool Reference](docs/TOOLS.md)**: A granular, comprehensive guide to every single tool and command available.
-*   **[🔌 Provider Setup](docs/providers/index.md)**: Detailed configuration instructions for Jira, GitHub, Trello, Asana, Monday.com, and Azure DevOps.
-*   **[❓ Troubleshooting](docs/TROUBLESHOOTING.md)**: Common issues and how to solve them.
-*   **[🤝 Contributing](docs/CONTRIBUTING.md)**: How to help build the future of Project Worker.
+*   **[🚀 Getting Started Guide](project-worker.wiki/GETTING_STARTED.md)**: The step-by-step tutorial to get you up and running in minutes.
+*   **[🛠️ Tool Reference](project-worker.wiki/TOOLS.md)**: A granular, comprehensive guide to every single tool and command available.
+*   **[🔌 Provider Setup](project-worker.wiki/providers/index.md)**: Detailed configuration instructions for Jira, GitHub, Trello, Asana, Monday.com, and Azure DevOps.
+*   **[❓ Troubleshooting](project-worker.wiki/TROUBLESHOOTING.md)**: Common issues and how to solve them.
+*   **[🤝 Contributing](project-worker.wiki/CONTRIBUTING.md)**: How to help build the future of Project Worker.
 
 ## 🌟 Core Features
 
@@ -47,7 +47,7 @@ We break down the walls between your favorite project management tools:
 4.  **Create a Task**:
     > "Create a task to fix the login bug."
 
-*See [Getting Started](docs/GETTING_STARTED.md) for the full guide.*
+*See [Getting Started](project-worker.wiki/GETTING_STARTED.md) for the full guide.*
 
 ## 📄 License
 
