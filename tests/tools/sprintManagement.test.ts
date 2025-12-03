@@ -6,7 +6,8 @@ import { registerEndSprint } from '../../src/tools/endSprint.js';
 import { registerGetSprintDetails } from '../../src/tools/getSprintDetails.js';
 import type { AppConfig } from '../../src/config.js';
 import { configManager } from '../../src/config.js';
-import type { Sprint } from '../../src/types.js';
+import { ProviderFactory } from '../../src/services/providerFactory.js';
+import type { Sprint, Task } from '../../src/types.js';
 
 // Mock configManager
 vi.mock('../../src/config.js', () => ({
@@ -16,9 +17,17 @@ vi.mock('../../src/config.js', () => ({
   },
 }));
 
+// Mock ProviderFactory
+vi.mock('../../src/services/providerFactory.js', () => ({
+  ProviderFactory: {
+    getProvider: vi.fn(),
+  },
+}));
+
 describe('Sprint Management Tools', () => {
   let mockServer: McpServer;
   let mockConfig: AppConfig;
+  let mockProvider: any;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -34,6 +43,12 @@ describe('Sprint Management Tools', () => {
     (configManager.save as vi.Mock).mockImplementation(async (newConfig: AppConfig) => {
       mockConfig = newConfig; // Update mockConfig state
     });
+
+    mockProvider = {
+      getTasks: vi.fn().mockResolvedValue([]),
+      updateTask: vi.fn().mockResolvedValue({} as Task),
+    };
+    (ProviderFactory.getProvider as vi.Mock).mockResolvedValue(mockProvider);
   });
 
   describe('start_sprint', () => {
@@ -142,6 +157,60 @@ describe('Sprint Management Tools', () => {
       );
       expect(result.content[0].text).toContain(`Sprint "${activeSprint.name}" successfully ended.`);
       expect(mockConfig.sprints[0].status).toBe('completed');
+    });
+
+    it('should move uncompleted tasks to backlog if requested', async () => {
+      const activeSprint: Sprint = {
+        id: 'sprint-active-1',
+        name: 'Active Sprint',
+        startDate: new Date().toISOString(),
+        endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        status: 'active',
+        goal: 'Active Goal',
+      };
+      mockConfig.sprints.push(activeSprint);
+      (configManager.get as vi.Mock).mockResolvedValue(mockConfig);
+
+      const tasks = [
+        { id: 't1', title: 'Done Task', status: 'done', sprintId: 'sprint-active-1' },
+        { id: 't2', title: 'Todo Task', status: 'todo', sprintId: 'sprint-active-1' },
+        { id: 't3', title: 'In Progress Task', status: 'in-progress', sprintId: 'sprint-active-1' },
+      ];
+      mockProvider.getTasks.mockResolvedValue(tasks);
+
+      registerEndSprint(mockServer);
+      const handler = (mockServer.registerTool as any).mock.calls.find(
+        (c: any) => c[0] === 'end_sprint',
+      )[2];
+
+      const result = await handler({ moveUncompletedToBacklog: true });
+
+      expect(ProviderFactory.getProvider).toHaveBeenCalled();
+      expect(mockProvider.getTasks).toHaveBeenCalled();
+
+      // t1 is done, should not be updated
+      expect(mockProvider.updateTask).not.toHaveBeenCalledWith(
+        expect.objectContaining({ id: 't1' }),
+      );
+
+      // t2 is todo, should be updated to have sprintId: null
+      expect(mockProvider.updateTask).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 't2',
+          sprintId: null,
+        }),
+      );
+
+      // t3 is in-progress, should be updated to have sprintId: null
+      expect(mockProvider.updateTask).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 't3',
+          sprintId: null,
+        }),
+      );
+
+      expect(result.content[0].text).toContain(`Sprint "${activeSprint.name}" successfully ended.`);
+      expect(result.content[0].text).toContain('Moved 2 uncompleted tasks to backlog');
     });
 
     it('should return an error if no active sprint is found', async () => {

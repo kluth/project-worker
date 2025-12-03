@@ -105,9 +105,17 @@ export class TrelloProvider implements ProjectProvider {
     return this.mapCardToTask(card);
   }
 
-  async updateTask(_input: UpdateTaskInput): Promise<Task> {
-    // Renamed to _input
-    throw new Error('Not implemented');
+  async updateTask(input: UpdateTaskInput): Promise<Task> {
+    await this.init();
+    let url = `https://api.trello.com/1/cards/${input.id}?key=${this.key}&token=${this.token}`;
+    if (input.title) url += `&name=${encodeURIComponent(input.title)}`;
+    if (input.description !== undefined) url += `&desc=${encodeURIComponent(input.description)}`;
+
+    const res = await fetch(url, { method: 'PUT' });
+    if (!res.ok) throw new Error(`Failed to update Trello card: ${res.statusText}`);
+
+    const card: TrelloCardResponse = await res.json();
+    return this.mapCardToTask(card);
   }
 
   async deleteTask(id: string): Promise<boolean> {
@@ -117,8 +125,16 @@ export class TrelloProvider implements ProjectProvider {
     return res.ok;
   }
 
-  async addComment(_taskId: string, _content: string): Promise<Task> {
-    // Renamed taskId, content
-    throw new Error('Not implemented');
+  async addComment(taskId: string, content: string): Promise<Task> {
+    await this.init();
+    const url = `https://api.trello.com/1/cards/${taskId}/actions/comments?key=${this.key}&token=${this.token}&text=${encodeURIComponent(content)}`;
+
+    const res = await fetch(url, { method: 'POST' });
+    if (!res.ok) throw new Error(`Failed to add comment to Trello card: ${res.statusText}`);
+
+    // Fetch the updated task to return it
+    const task = await this.getTaskById(taskId);
+    if (!task) throw new Error(`Task ${taskId} not found after adding comment`);
+    return task;
   }
 }

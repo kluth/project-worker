@@ -5,9 +5,11 @@ import { AsanaProvider } from '../src/providers/AsanaProvider.js';
 import { GitHubProvider } from '../src/providers/GitHubProvider.js';
 import { AzureDevOpsProvider } from '../src/providers/AzureDevOpsProvider.js';
 import { MondayProvider } from '../src/providers/MondayProvider.js';
+import { LocalProvider } from '../src/providers/LocalProvider.js';
 import type { ConfigManager } from '../src/config.js';
-import type { TaskFilter } from '../src/types.js';
+import type { TaskFilter, Task } from '../src/types.js';
 import type { Octokit } from '@octokit/rest';
+import os from 'os';
 
 // Mock ConfigManager
 const mockConfig: ConfigManager = {
@@ -53,8 +55,23 @@ const { mockIssues, mockPaginate, MockOctokit } = vi.hoisted(() => {
 vi.mock('@octokit/rest', () => ({
   Octokit: MockOctokit,
 }));
+
+// Mock DB
+vi.mock('../src/db.js', () => ({
+  db: {
+    getTasks: vi.fn(),
+    getTaskById: vi.fn(),
+    addTask: vi.fn(),
+    updateTask: vi.fn(),
+    deleteTask: vi.fn(),
+  },
+}));
+
+import { db } from '../src/db.js';
+
 describe('Providers (TDD)', () => {
   beforeEach(() => {
+    vi.restoreAllMocks(); // Restore spies
     vi.clearAllMocks();
     mockFetch.mockClear();
     // Clear Octokit mocks
@@ -65,6 +82,51 @@ describe('Providers (TDD)', () => {
     mockIssues.update.mockClear();
     mockIssues.createComment.mockClear(); // Keep this clear from earlier merges
     mockPaginate.mockClear(); // Clear paginate mock
+  });
+
+  describe('LocalProvider', () => {
+    it('should add a comment with correct author (OS user)', async () => {
+      // Spy on os.userInfo
+      vi.spyOn(os, 'userInfo').mockReturnValue({
+        username: 'testuser',
+        uid: 1000,
+        gid: 1000,
+        homedir: '/home/testuser',
+        shell: '/bin/bash',
+      });
+
+      const task: Task = {
+        id: '1',
+        title: 'Test Task',
+        description: '',
+        status: 'todo',
+        priority: 'medium',
+        type: 'task',
+        tags: [],
+        comments: [],
+        createdAt: '',
+        updatedAt: '',
+        checklists: [],
+        customFields: {},
+        blockedBy: [],
+      };
+      (db.getTaskById as vi.Mock).mockResolvedValue(task);
+
+      const provider = new LocalProvider();
+      await provider.addComment('1', 'Test Comment');
+
+      expect(db.updateTask).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: '1',
+          comments: expect.arrayContaining([
+            expect.objectContaining({
+              author: 'testuser',
+              content: 'Test Comment',
+            }),
+          ]),
+        }),
+      );
+    });
   });
 
   describe('JiraProvider', () => {
@@ -179,6 +241,81 @@ describe('Providers (TDD)', () => {
       expect(tasks[0].title).toBe('Trello Card');
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining('api.trello.com/1/boards/board123/cards'),
+      );
+    });
+
+    it('should update a card', async () => {
+      mockConfig.getProviderConfig.mockResolvedValue({
+        provider: 'trello',
+        credentials: { key: 'key', token: 'token' },
+        settings: { boardId: 'board123' },
+      });
+
+      const mockUpdatedCard = {
+        id: 'card1',
+        name: 'Updated Name',
+        desc: 'Updated Desc',
+        labels: [],
+        idMembers: [],
+      };
+
+      (global.fetch as vi.Mock).mockResolvedValue({
+        ok: true,
+        json: async () => mockUpdatedCard,
+      });
+
+      const provider = new TrelloProvider(mockConfig);
+      const task = await provider.updateTask({
+        id: 'card1',
+        title: 'Updated Name',
+        description: 'Updated Desc',
+      });
+
+      expect(task.title).toBe('Updated Name');
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('api.trello.com/1/cards/card1'),
+        expect.objectContaining({ method: 'PUT' }),
+      );
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('name=Updated%20Name'),
+        expect.anything(),
+      );
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('desc=Updated%20Desc'),
+        expect.anything(),
+      );
+    });
+
+    it('should add a comment to a card', async () => {
+      mockConfig.getProviderConfig.mockResolvedValue({
+        provider: 'trello',
+        credentials: { key: 'key', token: 'token' },
+        settings: { boardId: 'board123' },
+      });
+
+      const mockCardWithComment = {
+        id: 'card1',
+        name: 'Card Name',
+        desc: 'Desc',
+        labels: [],
+        idMembers: [],
+      };
+
+      (global.fetch as vi.Mock).mockResolvedValue({
+        ok: true,
+        json: async () => mockCardWithComment,
+      });
+
+      const provider = new TrelloProvider(mockConfig);
+      await provider.addComment('card1', 'New Comment');
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('api.trello.com/1/cards/card1/actions/comments'),
+        expect.objectContaining({ method: 'POST' }),
+      );
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('text=New%20Comment'),
+        expect.anything(),
       );
     });
   });

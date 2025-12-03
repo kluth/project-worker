@@ -2,6 +2,7 @@ import type { ProjectProvider } from './types.js';
 import type { Task, CreateTaskInput, UpdateTaskInput, TaskFilter } from '../types.js';
 import { db } from '../db.js';
 import { randomUUID } from 'crypto';
+import os from 'os';
 
 export class LocalProvider implements ProjectProvider {
   name = 'local';
@@ -78,9 +79,16 @@ export class LocalProvider implements ProjectProvider {
     const task = await db.getTaskById(taskId);
     if (!task) throw new Error(`Task ${taskId} not found`);
 
+    let author = 'LocalUser';
+    try {
+      author = os.userInfo().username;
+    } catch (error) {
+      // Ignore error, fallback to default
+    }
+
     const newComment = {
       id: randomUUID(),
-      author: 'LocalUser', // TODO: Configurable user
+      author,
       content,
       timestamp: new Date().toISOString(),
     };
