@@ -36,13 +36,13 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         uses: cycjimmy/semantic-release-action@v4
         with:
-          semantic_version: 19
+          version: 19
           branches: |
             [
               "main"
             ]
           extra_plugins: |
-            @semantic-release/changelog
-            @semantic-release/git
-            @semantic-release/github
-            @semantic-release/npm
+            - "@semantic-release/changelog"
+            - "@semantic-release/git"
+            - "@semantic-release/github"
+            - "@semantic-release/npm"
