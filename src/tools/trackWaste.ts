@@ -10,31 +10,26 @@ export function registerTrackWaste(server: McpServer): void {
     {
       description:
         'Track waste (Muda) in the Lean process. Supports 8 types: defects, overproduction, waiting, non-utilized-talent, transportation, inventory, motion, extra-processing.',
-      inputSchema: z
-        .object({
-          type: z
-            .enum([
-              'defects',
-              'overproduction',
-              'waiting',
-              'non-utilized-talent',
-              'transportation',
-              'inventory',
-              'motion',
-              'extra-processing',
-            ])
-            .describe('Type of waste (one of the 8 types of Muda)'),
-          description: z.string().describe('Description of the waste observed'),
-          location: z.string().optional().describe('Where the waste occurs'),
-          impact: z
-            .enum(['low', 'medium', 'high'])
-            .optional()
-            .describe('Impact level of the waste'),
-          mitigation: z.string().optional().describe('Proposed mitigation plan'),
-        }).shape,
+      inputSchema: z.object({
+        type: z
+          .enum([
+            'defects',
+            'overproduction',
+            'waiting',
+            'non-utilized-talent',
+            'transportation',
+            'inventory',
+            'motion',
+            'extra-processing',
+          ])
+          .describe('Type of waste (one of the 8 types of Muda)'),
+        description: z.string().describe('Description of the waste observed'),
+        location: z.string().optional().describe('Where the waste occurs'),
+        impact: z.enum(['low', 'medium', 'high']).optional().describe('Impact level of the waste'),
+        mitigation: z.string().optional().describe('Proposed mitigation plan'),
+      }).shape,
     },
     async ({ type, description, location, impact, mitigation }) => {
-
       const config = await configManager.get();
 
       // Validate Lean methodology is active

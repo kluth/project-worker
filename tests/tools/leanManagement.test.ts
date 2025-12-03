@@ -6,7 +6,6 @@ import { registerTrackWaste } from '../../src/tools/trackWaste.js';
 import { registerManagePdcaCycle } from '../../src/tools/managePdcaCycle.js';
 import type { AppConfig } from '../../src/config.js';
 import { configManager } from '../../src/config.js';
-import type { ValueStream, WasteItem, PdcaCycle } from '../../src/types.js';
 
 // Mock configManager
 vi.mock('../../src/config.js', () => ({

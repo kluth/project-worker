@@ -8,14 +8,12 @@ export function registerCompletePhase(server: McpServer): void {
     {
       description:
         'Mark a Waterfall phase as completed and automatically start the next phase in sequence.',
-      inputSchema: z
-        .object({
-          phaseId: z.string().describe('ID of the phase to complete'),
-          notes: z.string().optional().describe('Completion notes or comments'),
-        }).shape,
+      inputSchema: z.object({
+        phaseId: z.string().describe('ID of the phase to complete'),
+        notes: z.string().optional().describe('Completion notes or comments'),
+      }).shape,
     },
     async ({ phaseId, notes }) => {
-
       const config = await configManager.get();
 
       // Find the phase

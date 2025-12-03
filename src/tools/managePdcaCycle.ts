@@ -10,27 +10,19 @@ export function registerManagePdcaCycle(server: McpServer): void {
     {
       description:
         'Manage Plan-Do-Check-Act (PDCA) continuous improvement cycles for Lean methodology.',
-      inputSchema: z
-        .object({
-          action: z
-            .enum(['create', 'progress', 'list'])
-            .describe('Action: create new cycle, progress to next phase, or list cycles'),
-          cycleId: z
-            .string()
-            .optional()
-            .describe('ID of the cycle (required for progress action)'),
-          title: z.string().optional().describe('Title of the cycle (required for create)'),
-          plan: z.string().optional().describe('Plan phase description (required for create)'),
-          doNotes: z.string().optional().describe('Do phase notes (for progressing from Plan)'),
-          checkNotes: z
-            .string()
-            .optional()
-            .describe('Check phase notes (for progressing from Do)'),
-          actNotes: z.string().optional().describe('Act phase notes (for progressing from Check)'),
-        }).shape,
+      inputSchema: z.object({
+        action: z
+          .enum(['create', 'progress', 'list'])
+          .describe('Action: create new cycle, progress to next phase, or list cycles'),
+        cycleId: z.string().optional().describe('ID of the cycle (required for progress action)'),
+        title: z.string().optional().describe('Title of the cycle (required for create)'),
+        plan: z.string().optional().describe('Plan phase description (required for create)'),
+        doNotes: z.string().optional().describe('Do phase notes (for progressing from Plan)'),
+        checkNotes: z.string().optional().describe('Check phase notes (for progressing from Do)'),
+        actNotes: z.string().optional().describe('Act phase notes (for progressing from Check)'),
+      }).shape,
     },
     async ({ action, cycleId, title, plan, doNotes, checkNotes, actNotes }) => {
-
       const config = await configManager.get();
 
       // Validate Lean methodology is active

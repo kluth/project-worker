@@ -10,22 +10,17 @@ export function registerDefineValueStream(server: McpServer): void {
     {
       description:
         'Define a value stream map for Lean methodology, showing the flow of value from start to finish.',
-      inputSchema: z
-        .object({
-          name: z.string().describe('Name of the value stream'),
-          description: z
-            .string()
-            .optional()
-            .describe('Detailed description of the value stream'),
-          stages: z.array(z.string()).describe('Sequential stages in the value stream'),
-          metrics: z
-            .record(z.number())
-            .optional()
-            .describe('Metrics like leadTime, cycleTime, processTime (in days)'),
-        }).shape,
+      inputSchema: z.object({
+        name: z.string().describe('Name of the value stream'),
+        description: z.string().optional().describe('Detailed description of the value stream'),
+        stages: z.array(z.string()).describe('Sequential stages in the value stream'),
+        metrics: z
+          .record(z.number())
+          .optional()
+          .describe('Metrics like leadTime, cycleTime, processTime (in days)'),
+      }).shape,
     },
     async ({ name, description, stages, metrics }) => {
-
       const config = await configManager.get();
 
       // Validate Lean methodology is active

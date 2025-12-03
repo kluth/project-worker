@@ -8,17 +8,15 @@ export function registerGetPhaseDetails(server: McpServer): void {
     {
       description:
         'Get details about Waterfall phases. Can filter by phase ID or status, or list all phases.',
-      inputSchema: z
-        .object({
-          phaseId: z.string().optional().describe('Specific phase ID to retrieve'),
-          status: z
-            .enum(['not-started', 'in-progress', 'completed'])
-            .optional()
-            .describe('Filter phases by status'),
-        }).shape,
+      inputSchema: z.object({
+        phaseId: z.string().optional().describe('Specific phase ID to retrieve'),
+        status: z
+          .enum(['not-started', 'in-progress', 'completed'])
+          .optional()
+          .describe('Filter phases by status'),
+      }).shape,
     },
     async ({ phaseId, status }) => {
-
       const config = await configManager.get();
 
       // Get specific phase by ID

@@ -10,29 +10,25 @@ export function registerDefinePhase(server: McpServer): void {
     {
       description:
         'Define a new Waterfall project phase with gate checks and deliverables. Requires Waterfall methodology to be active.',
-      inputSchema: z
-        .object({
-          name: z
-            .string()
-            .describe('Name of the phase (e.g., Requirements, Design, Implementation)'),
-          description: z.string().optional().describe('Detailed description of the phase'),
-          order: z.number().describe('Sequential order of the phase (1, 2, 3, etc.)'),
-          gateChecks: z
-            .array(z.string())
-            .optional()
-            .describe('Gate criteria that must be met before completing this phase'),
-          deliverables: z
-            .array(z.string())
-            .optional()
-            .describe('Expected deliverables for this phase'),
-          approver: z
-            .string()
-            .optional()
-            .describe('Person responsible for approving phase completion'),
-        }).shape,
+      inputSchema: z.object({
+        name: z.string().describe('Name of the phase (e.g., Requirements, Design, Implementation)'),
+        description: z.string().optional().describe('Detailed description of the phase'),
+        order: z.number().describe('Sequential order of the phase (1, 2, 3, etc.)'),
+        gateChecks: z
+          .array(z.string())
+          .optional()
+          .describe('Gate criteria that must be met before completing this phase'),
+        deliverables: z
+          .array(z.string())
+          .optional()
+          .describe('Expected deliverables for this phase'),
+        approver: z
+          .string()
+          .optional()
+          .describe('Person responsible for approving phase completion'),
+      }).shape,
     },
     async ({ name, description, order, gateChecks, deliverables, approver }) => {
-
       const config = await configManager.get();
 
       // Validate Waterfall methodology is active

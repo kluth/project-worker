@@ -85,8 +85,7 @@ export class ConfigManager {
       parsedConfig.sprints = parsedConfig.sprints || DEFAULT_CONFIG.sprints;
       parsedConfig.kanbanBoards = parsedConfig.kanbanBoards || DEFAULT_CONFIG.kanbanBoards;
       parsedConfig.events = parsedConfig.events || DEFAULT_CONFIG.events;
-      parsedConfig.waterfallPhases =
-        parsedConfig.waterfallPhases || DEFAULT_CONFIG.waterfallPhases;
+      parsedConfig.waterfallPhases = parsedConfig.waterfallPhases || DEFAULT_CONFIG.waterfallPhases;
       parsedConfig.valueStreams = parsedConfig.valueStreams || DEFAULT_CONFIG.valueStreams;
       parsedConfig.wasteLog = parsedConfig.wasteLog || DEFAULT_CONFIG.wasteLog;
       parsedConfig.pdcaCycles = parsedConfig.pdcaCycles || DEFAULT_CONFIG.pdcaCycles;
