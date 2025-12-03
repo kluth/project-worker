@@ -147,6 +147,10 @@ registerScanTodos(server);
 // Enterprise Features
 registerManageReleases(server);
 registerLogWork(server);
+
+import { registerGenerateStandup } from './tools/generateStandup.js';
+registerGenerateStandup(server);
+
 registerManageChecklists(server);
 registerCustomFields(server);
 
