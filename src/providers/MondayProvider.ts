@@ -258,7 +258,7 @@ export class MondayProvider implements ProjectProvider {
     await this.init();
     const query = `
       mutation {
-        create_update (item_id: ${taskId}, body: "${content.replace(/"/g, '\\"')}") {
+        create_update (item_id: ${taskId}, body: "${JSON.stringify(content).slice(1, -1)}") {
           id
         }
       }
