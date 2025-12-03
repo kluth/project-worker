@@ -34,6 +34,44 @@ export type TaskType =
   | 'change'
   | string;
 
+export interface SurveyQuestion {
+  id: string;
+  text: string;
+  type: 'rating' | 'text' | 'choice';
+  options?: string[];
+}
+
+export interface TeamSurvey {
+  id: string;
+  title: string;
+  questions: SurveyQuestion[];
+  createdBy: string;
+  createdAt: string;
+  endDate?: string;
+  status: 'open' | 'closed';
+}
+
+export interface SurveyResponse {
+  id: string;
+  surveyId: string;
+  respondent?: string;
+  answers: Record<string, string | number>;
+  submittedAt: string;
+}
+
+export interface PairingSession {
+  id: string;
+  participants: string[];
+  startTime: string;
+  endTime?: string;
+  topic?: string;
+  rotationIntervalMinutes?: number;
+  currentDriver?: string;
+  currentNavigator?: string;
+  status: 'scheduled' | 'active' | 'completed';
+  notes?: string;
+}
+
 export interface KeyResult {
   id: string;
   objectiveId: string;

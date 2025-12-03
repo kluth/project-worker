@@ -14,6 +14,9 @@ import type {
   PersonalTodo,
   Objective,
   KeyResult,
+  TeamSurvey,
+  SurveyResponse,
+  PairingSession,
 } from './types.js';
 
 const DB_DIR = path.join(os.homedir(), '.gemini-project-worker');
@@ -31,6 +34,9 @@ interface DatabaseSchema {
   personalTodos: PersonalTodo[];
   objectives: Objective[];
   keyResults: KeyResult[];
+  teamSurveys: TeamSurvey[];
+  surveyResponses: SurveyResponse[];
+  pairingSessions: PairingSession[];
   lastUpdated: string;
 }
 
@@ -96,6 +102,37 @@ interface KeyResultRow {
   current: number;
   unit: string;
   status: string;
+}
+
+interface TeamSurveyRow {
+  id: string;
+  title: string;
+  questions: string; // JSON
+  createdBy: string;
+  createdAt: string;
+  endDate: string | null;
+  status: string;
+}
+
+interface SurveyResponseRow {
+  id: string;
+  surveyId: string;
+  respondent: string | null;
+  answers: string; // JSON
+  submittedAt: string;
+}
+
+interface PairingSessionRow {
+  id: string;
+  participants: string; // JSON
+  startTime: string;
+  endTime: string | null;
+  topic: string | null;
+  rotationIntervalMinutes: number | null;
+  currentDriver: string | null;
+  currentNavigator: string | null;
+  status: string;
+  notes: string | null;
 }
 
 // Define a type for the raw row data from SQLite for sprints
@@ -274,6 +311,37 @@ class SQLiteDatabase {
         current REAL,
         unit TEXT,
         status TEXT
+      );
+
+      CREATE TABLE IF NOT EXISTS team_surveys (
+        id TEXT PRIMARY KEY,
+        title TEXT,
+        questions TEXT, -- JSON
+        createdBy TEXT,
+        createdAt TEXT,
+        endDate TEXT,
+        status TEXT
+      );
+
+      CREATE TABLE IF NOT EXISTS survey_responses (
+        id TEXT PRIMARY KEY,
+        surveyId TEXT,
+        respondent TEXT,
+        answers TEXT, -- JSON
+        submittedAt TEXT
+      );
+
+      CREATE TABLE IF NOT EXISTS pairing_sessions (
+        id TEXT PRIMARY KEY,
+        participants TEXT, -- JSON
+        startTime TEXT,
+        endTime TEXT,
+        topic TEXT,
+        rotationIntervalMinutes INTEGER,
+        currentDriver TEXT,
+        currentNavigator TEXT,
+        status TEXT,
+        notes TEXT
       );
     `);
 
@@ -787,6 +855,131 @@ class SQLiteDatabase {
       | undefined;
     if (!row) return undefined;
     return { ...row, status: row.status as KeyResult['status'] };
+  }
+
+  // --- Team Health ---
+
+  async saveTeamSurvey(survey: TeamSurvey): Promise<void> {
+    const exists = this.db.prepare('SELECT id FROM team_surveys WHERE id = ?').get(survey.id);
+    const data = {
+      ...survey,
+      questions: JSON.stringify(survey.questions),
+    };
+    if (exists) {
+      this.db
+        .prepare(
+          'UPDATE team_surveys SET title = @title, questions = @questions, createdBy = @createdBy, endDate = @endDate, status = @status WHERE id = @id',
+        )
+        .run(data);
+    } else {
+      this.db
+        .prepare(
+          'INSERT INTO team_surveys (id, title, questions, createdBy, createdAt, endDate, status) VALUES (@id, @title, @questions, @createdBy, @createdAt, @endDate, @status)',
+        )
+        .run(data);
+    }
+  }
+
+  async getTeamSurveys(): Promise<TeamSurvey[]> {
+    const rows = this.db.prepare('SELECT * FROM team_surveys').all() as TeamSurveyRow[];
+    return rows.map((row) => ({
+      ...row,
+      questions: JSON.parse(row.questions),
+      endDate: row.endDate || undefined,
+      status: row.status as TeamSurvey['status'],
+    }));
+  }
+
+  async getTeamSurveyById(id: string): Promise<TeamSurvey | undefined> {
+    const row = this.db.prepare('SELECT * FROM team_surveys WHERE id = ?').get(id) as
+      | TeamSurveyRow
+      | undefined;
+    if (!row) return undefined;
+    return {
+      ...row,
+      questions: JSON.parse(row.questions),
+      endDate: row.endDate || undefined,
+      status: row.status as TeamSurvey['status'],
+    };
+  }
+
+  async saveSurveyResponse(response: SurveyResponse): Promise<void> {
+    const data = {
+      ...response,
+      answers: JSON.stringify(response.answers),
+    };
+    this.db
+      .prepare(
+        'INSERT INTO survey_responses (id, surveyId, respondent, answers, submittedAt) VALUES (@id, @surveyId, @respondent, @answers, @submittedAt)',
+      )
+      .run(data);
+  }
+
+  async getSurveyResponses(surveyId: string): Promise<SurveyResponse[]> {
+    const rows = this.db
+      .prepare('SELECT * FROM survey_responses WHERE surveyId = ?')
+      .all(surveyId) as SurveyResponseRow[];
+    return rows.map((row) => ({
+      ...row,
+      respondent: row.respondent || undefined,
+      answers: JSON.parse(row.answers),
+    }));
+  }
+
+  // --- Pairing Sessions ---
+
+  async savePairingSession(session: PairingSession): Promise<void> {
+    const exists = this.db.prepare('SELECT id FROM pairing_sessions WHERE id = ?').get(session.id);
+    const data = {
+      ...session,
+      participants: JSON.stringify(session.participants),
+    };
+    if (exists) {
+      this.db
+        .prepare(
+          'UPDATE pairing_sessions SET participants = @participants, startTime = @startTime, endTime = @endTime, topic = @topic, rotationIntervalMinutes = @rotationIntervalMinutes, currentDriver = @currentDriver, currentNavigator = @currentNavigator, status = @status, notes = @notes WHERE id = @id',
+        )
+        .run(data);
+    } else {
+      this.db
+        .prepare(
+          'INSERT INTO pairing_sessions (id, participants, startTime, endTime, topic, rotationIntervalMinutes, currentDriver, currentNavigator, status, notes) VALUES (@id, @participants, @startTime, @endTime, @topic, @rotationIntervalMinutes, @currentDriver, @currentNavigator, @status, @notes)',
+        )
+        .run(data);
+    }
+  }
+
+  async getPairingSessions(): Promise<PairingSession[]> {
+    const rows = this.db.prepare('SELECT * FROM pairing_sessions').all() as PairingSessionRow[];
+    return rows.map((row) => ({
+      ...row,
+      participants: JSON.parse(row.participants),
+      endTime: row.endTime || undefined,
+      topic: row.topic || undefined,
+      rotationIntervalMinutes: row.rotationIntervalMinutes || undefined,
+      currentDriver: row.currentDriver || undefined,
+      currentNavigator: row.currentNavigator || undefined,
+      notes: row.notes || undefined,
+      status: row.status as PairingSession['status'],
+    }));
+  }
+
+  async getPairingSessionById(id: string): Promise<PairingSession | undefined> {
+    const row = this.db.prepare('SELECT * FROM pairing_sessions WHERE id = ?').get(id) as
+      | PairingSessionRow
+      | undefined;
+    if (!row) return undefined;
+    return {
+      ...row,
+      participants: JSON.parse(row.participants),
+      endTime: row.endTime || undefined,
+      topic: row.topic || undefined,
+      rotationIntervalMinutes: row.rotationIntervalMinutes || undefined,
+      currentDriver: row.currentDriver || undefined,
+      currentNavigator: row.currentNavigator || undefined,
+      notes: row.notes || undefined,
+      status: row.status as PairingSession['status'],
+    };
   }
 }
 

@@ -128,6 +128,14 @@ registerPersonalProductivity(server);
 import { registerManageOKRs } from './tools/manageOKRs.js';
 registerManageOKRs(server);
 
+// Team Health & Sentiment (Issue #20)
+import { registerManageTeamHealth } from './tools/manageTeamHealth.js';
+registerManageTeamHealth(server);
+
+// Pairing/Mob Programming (Issue #21)
+import { registerManagePairing } from './tools/managePairing.js';
+registerManagePairing(server);
+
 // Enterprise Features
 registerManageReleases(server);
 registerLogWork(server);
