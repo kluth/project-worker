@@ -206,3 +206,19 @@ export interface TaskFilter {
   parentId?: string;
   type?: TaskType;
 }
+
+// Waterfall methodology types
+export type WaterfallPhaseStatus = 'not-started' | 'in-progress' | 'completed';
+
+export interface WaterfallPhase {
+  id: string;
+  name: string;
+  description: string;
+  order: number; // Determines sequential flow
+  status: WaterfallPhaseStatus;
+  gateChecks: string[]; // Gate criteria that must be met
+  startDate?: string;
+  endDate?: string;
+  deliverables?: string[];
+  approver?: string;
+}

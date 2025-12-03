@@ -1,7 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import os from 'os';
-import type { Sprint, TaskStatus, Event } from './types.js'; // Import Sprint, TaskStatus, and Event types
+import type { Sprint, TaskStatus, Event, WaterfallPhase } from './types.js'; // Import Sprint, TaskStatus, Event, and WaterfallPhase types
 
 const CONFIG_DIR = path.join(os.homedir(), '.gemini-project-worker');
 const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json');
@@ -29,7 +29,8 @@ export interface AppConfig {
   agileMethodology: AgileMethodologyConfig;
   sprints: Sprint[]; // From Issue #6
   kanbanBoards: KanbanBoardConfig[]; // From Issue #7
-  events: Event[]; // New for Issue #8
+  events: Event[]; // From Issue #8
+  waterfallPhases: WaterfallPhase[]; // From Issue #11
 }
 
 const DEFAULT_CONFIG: AppConfig = {
@@ -43,6 +44,7 @@ const DEFAULT_CONFIG: AppConfig = {
   sprints: [], // Default for sprints
   kanbanBoards: [], // Default for kanban boards
   events: [], // Default for events
+  waterfallPhases: [], // Default for waterfall phases
 };
 
 export class ConfigManager {
@@ -69,6 +71,8 @@ export class ConfigManager {
       parsedConfig.sprints = parsedConfig.sprints || DEFAULT_CONFIG.sprints;
       parsedConfig.kanbanBoards = parsedConfig.kanbanBoards || DEFAULT_CONFIG.kanbanBoards;
       parsedConfig.events = parsedConfig.events || DEFAULT_CONFIG.events;
+      parsedConfig.waterfallPhases =
+        parsedConfig.waterfallPhases || DEFAULT_CONFIG.waterfallPhases;
       this.config = parsedConfig; // Assign to this.config after ensuring it's fully initialized
       return parsedConfig;
     } catch (e: unknown) {
