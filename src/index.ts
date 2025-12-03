@@ -136,6 +136,10 @@ registerManageTeamHealth(server);
 import { registerManagePairing } from './tools/managePairing.js';
 registerManagePairing(server);
 
+// Visualization & Dashboard (Issue #10)
+import { registerVisualizationTools } from './tools/visualization.js';
+registerVisualizationTools(server);
+
 // Enterprise Features
 registerManageReleases(server);
 registerLogWork(server);
