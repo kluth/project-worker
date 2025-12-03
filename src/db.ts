@@ -3,7 +3,16 @@ import os from 'os';
 import fs from 'fs';
 import Database from 'better-sqlite3';
 
-import type { Task, AuditLogEntry, Sprint, WikiPage, Discussion, Release } from './types.js';
+import type {
+  Task,
+  AuditLogEntry,
+  Sprint,
+  WikiPage,
+  Discussion,
+  Release,
+  PomodoroSession,
+  PersonalTodo,
+} from './types.js';
 
 const DB_DIR = path.join(os.homedir(), '.gemini-project-worker');
 const DB_FILE = path.join(DB_DIR, 'project-worker.sqlite');
@@ -16,6 +25,8 @@ interface DatabaseSchema {
   auditLogs: AuditLogEntry[];
   wikiPages: WikiPage[];
   discussions: Discussion[];
+  pomodoroSessions: PomodoroSession[];
+  personalTodos: PersonalTodo[];
   lastUpdated: string;
 }
 
@@ -44,6 +55,23 @@ interface TaskRow {
   checklists: string; // JSON string
   customFields: string; // JSON string
   blockedBy: string; // JSON string
+}
+
+interface PomodoroSessionRow {
+  id: string;
+  startTime: string;
+  endTime: string;
+  durationMinutes: number;
+  label: string | null;
+  status: string;
+}
+
+interface PersonalTodoRow {
+  id: string;
+  text: string;
+  isCompleted: number; // 0 or 1
+  createdAt: string;
+  completedAt: string | null;
 }
 
 // Define a type for the raw row data from SQLite for sprints
@@ -84,6 +112,7 @@ interface WikiPageRow {
   content: string;
   tags: string; // JSON string
   lastUpdated: string;
+  versions?: string; // JSON string
 }
 
 // Define a type for the raw row data from SQLite for discussions
@@ -173,6 +202,7 @@ class SQLiteDatabase {
         content TEXT,
         tags TEXT, -- JSON
         lastUpdated TEXT
+        -- versions added via migration
       );
 
       CREATE TABLE IF NOT EXISTS discussions (
@@ -184,7 +214,30 @@ class SQLiteDatabase {
         createdAt TEXT,
         updatedAt TEXT
       );
+
+      CREATE TABLE IF NOT EXISTS pomodoro_sessions (
+        id TEXT PRIMARY KEY,
+        startTime TEXT,
+        endTime TEXT,
+        durationMinutes INTEGER,
+        label TEXT,
+        status TEXT
+      );
+
+      CREATE TABLE IF NOT EXISTS personal_todos (
+        id TEXT PRIMARY KEY,
+        text TEXT,
+        isCompleted INTEGER,
+        createdAt TEXT,
+        completedAt TEXT
+      );
     `);
+
+    try {
+      this.db.prepare('ALTER TABLE wiki_pages ADD COLUMN versions TEXT').run();
+    } catch {
+      // Ignore if column already exists
+    }
   }
 
   private migrateFromLegacy() {
@@ -213,7 +266,7 @@ class SQLiteDatabase {
             'INSERT INTO audit_logs (id, taskId, field, oldValue, newValue, changedBy, timestamp) VALUES (@id, @taskId, @field, @oldValue, @newValue, @changedBy, @timestamp)',
           );
           const insertWiki = this.db.prepare(
-            'INSERT INTO wiki_pages (id, slug, title, content, tags, lastUpdated) VALUES (@id, @slug, @title, @content, @tags, @lastUpdated)',
+            'INSERT INTO wiki_pages (id, slug, title, content, tags, lastUpdated, versions) VALUES (@id, @slug, @title, @content, @tags, @lastUpdated, @versions)',
           );
           const insertDiscussion = this.db.prepare(
             'INSERT INTO discussions (id, title, status, messages, tags, createdAt, updatedAt) VALUES (@id, @title, @status, @messages, @tags, @createdAt, @updatedAt)',
@@ -248,7 +301,13 @@ class SQLiteDatabase {
             legacyData.wikiPages?.forEach(
               (
                 w, // Changed from (w: any)
-              ) => insertWiki.run({ ...w, tags: JSON.stringify(w.tags || []) }),
+              ) =>
+                insertWiki.run({
+                  ...w,
+                  tags: JSON.stringify(w.tags || []),
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  versions: JSON.stringify((w as any).versions || []), // Handle legacy versions if any
+                }),
             );
             legacyData.discussions?.forEach(
               (
@@ -418,6 +477,7 @@ class SQLiteDatabase {
     return rows.map((row) => ({
       ...row,
       tags: JSON.parse(row.tags),
+      versions: row.versions ? JSON.parse(row.versions) : [],
     }));
   }
 
@@ -426,7 +486,11 @@ class SQLiteDatabase {
       | WikiPageRow
       | undefined;
     if (!row) return undefined;
-    return { ...row, tags: JSON.parse(row.tags) };
+    return {
+      ...row,
+      tags: JSON.parse(row.tags),
+      versions: row.versions ? JSON.parse(row.versions) : [],
+    };
   }
 
   async saveWikiPage(page: WikiPage): Promise<void> {
@@ -434,22 +498,36 @@ class SQLiteDatabase {
     if (exists) {
       this.db
         .prepare(
-          'UPDATE wiki_pages SET title = @title, content = @content, tags = @tags, lastUpdated = @lastUpdated WHERE slug = @slug',
+          'UPDATE wiki_pages SET title = @title, content = @content, tags = @tags, lastUpdated = @lastUpdated, versions = @versions WHERE slug = @slug',
         )
         .run({
           ...page,
           tags: JSON.stringify(page.tags),
+          versions: JSON.stringify(page.versions || []),
         });
     } else {
       this.db
         .prepare(
-          'INSERT INTO wiki_pages (id, slug, title, content, tags, lastUpdated) VALUES (@id, @slug, @title, @content, @tags, @lastUpdated)',
+          'INSERT INTO wiki_pages (id, slug, title, content, tags, lastUpdated, versions) VALUES (@id, @slug, @title, @content, @tags, @lastUpdated, @versions)',
         )
         .run({
           ...page,
           tags: JSON.stringify(page.tags),
+          versions: JSON.stringify(page.versions || []),
         });
     }
+  }
+
+  async searchWikiPages(query: string): Promise<WikiPage[]> {
+    const term = `%${query}%`;
+    const rows = this.db
+      .prepare('SELECT * FROM wiki_pages WHERE title LIKE ? OR content LIKE ? OR tags LIKE ?')
+      .all(term, term, term) as WikiPageRow[];
+    return rows.map((row) => ({
+      ...row,
+      tags: JSON.parse(row.tags),
+      versions: row.versions ? JSON.parse(row.versions) : [],
+    }));
   }
 
   // --- Discussions ---
@@ -500,6 +578,82 @@ class SQLiteDatabase {
           tags: JSON.stringify(discussion.tags),
         });
     }
+  }
+
+  // --- Pomodoro ---
+
+  async savePomodoroSession(session: PomodoroSession): Promise<void> {
+    const exists = this.db.prepare('SELECT id FROM pomodoro_sessions WHERE id = ?').get(session.id);
+    if (exists) {
+      this.db
+        .prepare(
+          'UPDATE pomodoro_sessions SET startTime = @startTime, endTime = @endTime, durationMinutes = @durationMinutes, label = @label, status = @status WHERE id = @id',
+        )
+        .run(session);
+    } else {
+      this.db
+        .prepare(
+          'INSERT INTO pomodoro_sessions (id, startTime, endTime, durationMinutes, label, status) VALUES (@id, @startTime, @endTime, @durationMinutes, @label, @status)',
+        )
+        .run(session);
+    }
+  }
+
+  async getPomodoroSessions(): Promise<PomodoroSession[]> {
+    const rows = this.db.prepare('SELECT * FROM pomodoro_sessions').all() as PomodoroSessionRow[];
+    return rows.map((row) => ({
+      ...row,
+      label: row.label || undefined,
+      status: row.status as PomodoroSession['status'],
+    }));
+  }
+
+  // --- Personal Todos ---
+
+  async savePersonalTodo(todo: PersonalTodo): Promise<void> {
+    const exists = this.db.prepare('SELECT id FROM personal_todos WHERE id = ?').get(todo.id);
+    const data = {
+      ...todo,
+      isCompleted: todo.isCompleted ? 1 : 0,
+    };
+    if (exists) {
+      this.db
+        .prepare(
+          'UPDATE personal_todos SET text = @text, isCompleted = @isCompleted, createdAt = @createdAt, completedAt = @completedAt WHERE id = @id',
+        )
+        .run(data);
+    } else {
+      this.db
+        .prepare(
+          'INSERT INTO personal_todos (id, text, isCompleted, createdAt, completedAt) VALUES (@id, @text, @isCompleted, @createdAt, @completedAt)',
+        )
+        .run(data);
+    }
+  }
+
+  async getPersonalTodos(): Promise<PersonalTodo[]> {
+    const rows = this.db.prepare('SELECT * FROM personal_todos').all() as PersonalTodoRow[];
+    return rows.map((row) => ({
+      ...row,
+      isCompleted: row.isCompleted === 1,
+      completedAt: row.completedAt || undefined,
+    }));
+  }
+
+  async getPersonalTodoById(id: string): Promise<PersonalTodo | undefined> {
+    const row = this.db.prepare('SELECT * FROM personal_todos WHERE id = ?').get(id) as
+      | PersonalTodoRow
+      | undefined;
+    if (!row) return undefined;
+    return {
+      ...row,
+      isCompleted: row.isCompleted === 1,
+      completedAt: row.completedAt || undefined,
+    };
+  }
+
+  async deletePersonalTodo(id: string): Promise<void> {
+    this.db.prepare('DELETE FROM personal_todos WHERE id = ?').run(id);
   }
 }
 

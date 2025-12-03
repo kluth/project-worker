@@ -120,6 +120,10 @@ registerCreateMeeting(server);
 registerAddMeetingNote(server);
 registerSummarizeMeeting(server);
 
+// Personal Productivity Tools (Issue #18)
+import { registerPersonalProductivity } from './tools/personalProductivity.js';
+registerPersonalProductivity(server);
+
 // Enterprise Features
 registerManageReleases(server);
 registerLogWork(server);

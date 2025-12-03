@@ -80,6 +80,14 @@ export interface Checklist {
   items: ChecklistItem[];
 }
 
+export interface WikiPageVersion {
+  version: number;
+  content: string;
+  updatedAt: string;
+  updatedBy: string;
+  commitMessage?: string;
+}
+
 export interface WikiPage {
   id: string;
   slug: string;
@@ -87,6 +95,7 @@ export interface WikiPage {
   content: string;
   tags: string[];
   lastUpdated: string;
+  versions?: WikiPageVersion[];
 }
 
 export interface DiscussionMessage {
@@ -350,6 +359,23 @@ export interface RetroAction {
 }
 
 // Meeting management types
+export interface PomodoroSession {
+  id: string;
+  startTime: string;
+  endTime: string;
+  durationMinutes: number;
+  label?: string;
+  status: 'running' | 'completed' | 'cancelled';
+}
+
+export interface PersonalTodo {
+  id: string;
+  text: string;
+  isCompleted: boolean;
+  createdAt: string;
+  completedAt?: string;
+}
+
 export interface MeetingNote {
   id: string;
   content: string;
