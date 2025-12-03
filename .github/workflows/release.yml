@@ -34,7 +34,6 @@ jobs:
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         uses: cycjimmy/semantic-release-action@v4
         with:
           semantic_version: 19
@@ -45,3 +44,5 @@ jobs:
           extra_plugins: |
             @semantic-release/changelog
             @semantic-release/git
+            @semantic-release/github
+            @semantic-release/npm
