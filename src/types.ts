@@ -222,3 +222,48 @@ export interface WaterfallPhase {
   deliverables?: string[];
   approver?: string;
 }
+
+// Lean methodology types
+export type WasteType =
+  | 'defects'
+  | 'overproduction'
+  | 'waiting'
+  | 'non-utilized-talent'
+  | 'transportation'
+  | 'inventory'
+  | 'motion'
+  | 'extra-processing';
+
+export interface ValueStream {
+  id: string;
+  name: string;
+  description: string;
+  stages: string[]; // Sequential stages in the value stream
+  metrics?: Record<string, number>; // e.g., leadTime, cycleTime, processTime
+  createdAt: string;
+}
+
+export interface WasteItem {
+  id: string;
+  type: WasteType; // One of the 7+1 types of waste (Muda)
+  description: string;
+  location?: string; // Where the waste occurs
+  impact?: 'low' | 'medium' | 'high';
+  mitigation?: string; // Proposed mitigation plan
+  identifiedAt: string;
+  resolvedAt?: string;
+}
+
+export type PdcaPhase = 'plan' | 'do' | 'check' | 'act' | 'completed';
+
+export interface PdcaCycle {
+  id: string;
+  title: string;
+  currentPhase: PdcaPhase;
+  plan: string; // Plan phase description
+  doNotes?: string; // Do phase notes
+  checkNotes?: string; // Check phase notes
+  actNotes?: string; // Act phase notes
+  createdAt: string;
+  completedAt?: string;
+}
