@@ -9,6 +9,9 @@ import type {
   ValueStream,
   WasteItem,
   PdcaCycle,
+  ProjectBrief,
+  BusinessCase,
+  Prince2Organization,
 } from './types.js'; // Import agile methodology types
 
 const CONFIG_DIR = path.join(os.homedir(), '.gemini-project-worker');
@@ -42,6 +45,9 @@ export interface AppConfig {
   valueStreams: ValueStream[]; // From Issue #12
   wasteLog: WasteItem[]; // From Issue #12
   pdcaCycles: PdcaCycle[]; // From Issue #12
+  projectBrief?: ProjectBrief; // From Issue #13
+  businessCase?: BusinessCase; // From Issue #13
+  prince2Organization?: Prince2Organization; // From Issue #13
 }
 
 const DEFAULT_CONFIG: AppConfig = {

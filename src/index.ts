@@ -96,6 +96,14 @@ registerDefineValueStream(server);
 registerTrackWaste(server);
 registerManagePdcaCycle(server);
 
+// PRINCE2 Methodology Management (Issue #13)
+import { registerDefineProjectBrief } from './tools/defineProjectBrief.js';
+import { registerManageBusinessCase } from './tools/manageBusinessCase.js';
+import { registerDefinePrince2Organization } from './tools/definePrince2Organization.js';
+registerDefineProjectBrief(server);
+registerManageBusinessCase(server);
+registerDefinePrince2Organization(server);
+
 // Enterprise Features
 registerManageReleases(server);
 registerLogWork(server);
