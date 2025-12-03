@@ -12,6 +12,8 @@ import type {
   ProjectBrief,
   BusinessCase,
   Prince2Organization,
+  Retrospective,
+  RetroAction,
 } from './types.js'; // Import agile methodology types
 
 const CONFIG_DIR = path.join(os.homedir(), '.gemini-project-worker');
@@ -48,6 +50,8 @@ export interface AppConfig {
   projectBrief?: ProjectBrief; // From Issue #13
   businessCase?: BusinessCase; // From Issue #13
   prince2Organization?: Prince2Organization; // From Issue #13
+  retrospectives: Retrospective[]; // From Issue #15
+  retroActions: RetroAction[]; // From Issue #15
 }
 
 const DEFAULT_CONFIG: AppConfig = {
@@ -65,6 +69,8 @@ const DEFAULT_CONFIG: AppConfig = {
   valueStreams: [], // Default for value streams
   wasteLog: [], // Default for waste log
   pdcaCycles: [], // Default for PDCA cycles
+  retrospectives: [], // Default for retrospectives
+  retroActions: [], // Default for retro actions
 };
 
 export class ConfigManager {
@@ -95,6 +101,8 @@ export class ConfigManager {
       parsedConfig.valueStreams = parsedConfig.valueStreams || DEFAULT_CONFIG.valueStreams;
       parsedConfig.wasteLog = parsedConfig.wasteLog || DEFAULT_CONFIG.wasteLog;
       parsedConfig.pdcaCycles = parsedConfig.pdcaCycles || DEFAULT_CONFIG.pdcaCycles;
+      parsedConfig.retrospectives = parsedConfig.retrospectives || DEFAULT_CONFIG.retrospectives;
+      parsedConfig.retroActions = parsedConfig.retroActions || DEFAULT_CONFIG.retroActions;
       this.config = parsedConfig; // Assign to this.config after ensuring it's fully initialized
       return parsedConfig;
     } catch (e: unknown) {

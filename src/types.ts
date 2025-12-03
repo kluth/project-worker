@@ -303,3 +303,48 @@ export interface Prince2Organization {
   createdAt: string;
   updatedAt?: string;
 }
+
+// Retrospective and feedback types
+export type RetrospectiveFormat =
+  | 'start-stop-continue'
+  | 'mad-sad-glad'
+  | '4Ls' // Liked, Learned, Lacked, Longed for
+  | 'sailboat'; // Sailboat retrospective
+
+export type FeedbackType = 'positive' | 'negative' | 'suggestion';
+
+export type RetrospectiveStatus = 'active' | 'closed';
+
+export type RetroActionStatus = 'pending' | 'in-progress' | 'completed';
+
+export interface FeedbackItem {
+  id: string;
+  type: FeedbackType;
+  content: string;
+  author?: string; // Optional for anonymous feedback
+  anonymous?: boolean;
+  createdAt: string;
+}
+
+export interface Retrospective {
+  id: string;
+  title: string;
+  format: RetrospectiveFormat;
+  facilitator?: string;
+  participants?: string[];
+  status: RetrospectiveStatus;
+  feedback: FeedbackItem[];
+  createdAt: string;
+  closedAt?: string;
+}
+
+export interface RetroAction {
+  id: string;
+  description: string;
+  status: RetroActionStatus;
+  assignee?: string;
+  retroId: string; // Link to the retrospective
+  createdAt: string;
+  completedAt?: string;
+  notes?: string;
+}

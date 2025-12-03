@@ -104,6 +104,14 @@ registerDefineProjectBrief(server);
 registerManageBusinessCase(server);
 registerDefinePrince2Organization(server);
 
+// Retrospective & Feedback Tools (Issue #15)
+import { registerStartRetrospective } from './tools/startRetrospective.js';
+import { registerSubmitFeedback } from './tools/submitFeedback.js';
+import { registerTrackRetroActions } from './tools/trackRetroActions.js';
+registerStartRetrospective(server);
+registerSubmitFeedback(server);
+registerTrackRetroActions(server);
+
 // Enterprise Features
 registerManageReleases(server);
 registerLogWork(server);
