@@ -88,6 +88,14 @@ registerDefinePhase(server);
 registerCompletePhase(server);
 registerGetPhaseDetails(server);
 
+// Lean Methodology Management (Issue #12)
+import { registerDefineValueStream } from './tools/defineValueStream.js';
+import { registerTrackWaste } from './tools/trackWaste.js';
+import { registerManagePdcaCycle } from './tools/managePdcaCycle.js';
+registerDefineValueStream(server);
+registerTrackWaste(server);
+registerManagePdcaCycle(server);
+
 // Enterprise Features
 registerManageReleases(server);
 registerLogWork(server);

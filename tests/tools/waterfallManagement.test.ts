@@ -76,9 +76,7 @@ describe('Waterfall Phase Management', () => {
           ]),
         }),
       );
-      expect(result.content[0].text).toContain(
-        `Phase "${phaseInput.name}" defined successfully`,
-      );
+      expect(result.content[0].text).toContain(`Phase "${phaseInput.name}" defined successfully`);
       expect(mockConfig.waterfallPhases).toHaveLength(1);
       expect(mockConfig.waterfallPhases[0].status).toBe('not-started');
     });
@@ -233,7 +231,9 @@ describe('Waterfall Phase Management', () => {
       expect(mockConfig.waterfallPhases[0].status).toBe('completed');
       expect(mockConfig.waterfallPhases[1].status).toBe('in-progress');
       expect(mockConfig.waterfallPhases[1].startDate).toBeDefined();
-      expect(result.content[0].text).toContain('Next phase "Design" has been automatically started');
+      expect(result.content[0].text).toContain(
+        'Next phase "Design" has been automatically started',
+      );
     });
   });
 
