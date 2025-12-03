@@ -110,7 +110,11 @@ export class AzureDevOpsProvider implements ProjectProvider {
 
     const detailsData = await detailsResponse.json();
 
-    return detailsData.value.map((item: AzureDevOpsWorkItemResponse) => ({
+    return detailsData.value.map((item: AzureDevOpsWorkItemResponse) => this.mapWorkItem(item));
+  }
+
+  private mapWorkItem(item: AzureDevOpsWorkItemResponse): Task {
+    return {
       id: item.id.toString(),
       title: item.fields['System.Title'],
       description: item.fields['System.Description'] || '',
@@ -127,7 +131,7 @@ export class AzureDevOpsProvider implements ProjectProvider {
       checklists: [],
       customFields: {},
       blockedBy: [],
-    }));
+    };
   }
 
   async createTask(input: CreateTaskInput): Promise<Task> {
@@ -161,42 +165,86 @@ export class AzureDevOpsProvider implements ProjectProvider {
     }
 
     const item: AzureDevOpsWorkItemResponse = await response.json(); // Typed 'item'
-
-    return {
-      id: item.id.toString(),
-      title: item.fields['System.Title'],
-      description: item.fields['System.Description'] || '',
-      status: item.fields['System.State'],
-      priority: input.priority || 'medium',
-      type: item.fields['System.WorkItemType'],
-      createdAt: item.fields['System.CreatedDate'],
-      updatedAt: item.fields['System.ChangedDate'],
-      source: 'azure-devops',
-      tags: [],
-      comments: [],
-      checklists: [],
-      customFields: {},
-      blockedBy: [],
-    };
+    return this.mapWorkItem(item);
   }
 
-  async getTaskById(_id: string): Promise<Task | undefined> {
-    // Renamed id to _id
-    return undefined; // TODO
+  async getTaskById(id: string): Promise<Task | undefined> {
+    await this.init();
+    const response = await fetch(`${this.baseUrl}/workitems/${id}?api-version=6.0`, {
+      headers: this.getHeaders(),
+    });
+
+    if (!response.ok) return undefined;
+
+    const item: AzureDevOpsWorkItemResponse = await response.json();
+    return this.mapWorkItem(item);
   }
 
-  async updateTask(_input: UpdateTaskInput): Promise<Task> {
-    // Renamed input to _input
-    throw new Error('Not implemented');
+  async updateTask(input: UpdateTaskInput): Promise<Task> {
+    await this.init();
+    const patchDocument: Array<{ op: string; path: string; value: unknown }> = [];
+
+    if (input.title) {
+      patchDocument.push({ op: 'add', path: '/fields/System.Title', value: input.title });
+    }
+    if (input.description !== undefined) {
+      patchDocument.push({
+        op: 'add',
+        path: '/fields/System.Description',
+        value: input.description,
+      });
+    }
+    if (input.status) {
+      patchDocument.push({ op: 'add', path: '/fields/System.State', value: input.status });
+    }
+
+    const response = await fetch(`${this.baseUrl}/workitems/${input.id}?api-version=6.0`, {
+      method: 'PATCH',
+      headers: {
+        ...this.getHeaders(),
+        'Content-Type': 'application/json-patch+json',
+      },
+      body: JSON.stringify(patchDocument),
+    });
+
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(`Azure DevOps Update error: ${response.statusText} - ${err}`);
+    }
+
+    const item: AzureDevOpsWorkItemResponse = await response.json();
+    return this.mapWorkItem(item);
   }
 
-  async deleteTask(_id: string): Promise<boolean> {
-    // Renamed id to _id
-    throw new Error('Not implemented');
+  async deleteTask(id: string): Promise<boolean> {
+    await this.init();
+    const response = await fetch(`${this.baseUrl}/workitems/${id}?api-version=6.0`, {
+      method: 'DELETE',
+      headers: this.getHeaders(),
+    });
+    return response.ok;
   }
 
-  async addComment(_taskId: string, _content: string): Promise<Task> {
-    // Renamed taskId, content
-    throw new Error('Not implemented');
+  async addComment(taskId: string, content: string): Promise<Task> {
+    await this.init();
+    // Using the Comments API
+    // URL: https://dev.azure.com/{organization}/{project}/_apis/wit/workItems/{workItemId}/comments?api-version=6.0-preview.3
+    const url = `${this.baseUrl}/workItems/${taskId}/comments?api-version=6.0-preview.3`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: this.getHeaders(),
+      body: JSON.stringify({ text: content }),
+    });
+
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(`Azure DevOps Add Comment error: ${response.statusText} - ${err}`);
+    }
+
+    // Return updated task
+    const task = await this.getTaskById(taskId);
+    if (!task) throw new Error('Task not found after adding comment');
+    return task;
   }
 }

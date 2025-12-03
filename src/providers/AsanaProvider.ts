@@ -96,9 +96,25 @@ export class AsanaProvider implements ProjectProvider {
     return this.mapToTask(data.data);
   }
 
-  async updateTask(_input: UpdateTaskInput): Promise<Task> {
-    // Renamed to _input
-    throw new Error('Not implemented');
+  async updateTask(input: UpdateTaskInput): Promise<Task> {
+    await this.init();
+    const data: Record<string, unknown> = {};
+    if (input.title) data.name = input.title;
+    if (input.description !== undefined) data.notes = input.description;
+    if (input.status) {
+      data.completed = input.status === 'done' || input.status === 'completed';
+    }
+
+    const res = await fetch(`https://app.asana.com/api/1.0/tasks/${input.id}`, {
+      method: 'PUT',
+      headers: this.getHeaders(),
+      body: JSON.stringify({ data }),
+    });
+
+    if (!res.ok) throw new Error(`Failed to update Asana task: ${res.statusText}`);
+
+    const responseData = await res.json();
+    return this.mapToTask(responseData.data);
   }
 
   async deleteTask(id: string): Promise<boolean> {
@@ -110,8 +126,19 @@ export class AsanaProvider implements ProjectProvider {
     return res.ok;
   }
 
-  async addComment(_taskId: string, _content: string): Promise<Task> {
-    // Renamed to _taskId, _content
-    throw new Error('Not implemented');
+  async addComment(taskId: string, content: string): Promise<Task> {
+    await this.init();
+    const res = await fetch(`https://app.asana.com/api/1.0/tasks/${taskId}/stories`, {
+      method: 'POST',
+      headers: this.getHeaders(),
+      body: JSON.stringify({ data: { text: content } }),
+    });
+
+    if (!res.ok) throw new Error(`Failed to add comment to Asana task: ${res.statusText}`);
+
+    // Return updated task
+    const task = await this.getTaskById(taskId);
+    if (!task) throw new Error('Task not found after adding comment');
+    return task;
   }
 }

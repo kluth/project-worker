@@ -180,9 +180,45 @@ export class JiraProvider implements ProjectProvider {
     return newTask;
   }
 
-  async updateTask(_input: UpdateTaskInput): Promise<Task> {
-    // Renamed to _input
-    throw new Error('Jira update not implemented yet');
+  async updateTask(input: UpdateTaskInput): Promise<Task> {
+    await this.init();
+    const fields: Record<string, unknown> = {};
+
+    if (input.title) fields.summary = input.title;
+    if (input.description !== undefined) {
+      fields.description = {
+        type: 'doc',
+        version: 1,
+        content: [
+          {
+            type: 'paragraph',
+            content: [{ type: 'text', text: input.description || ' ' }],
+          },
+        ],
+      };
+    }
+    if (input.priority) {
+      // Simple mapping - real Jira often needs ID or specific name
+      fields.priority = { name: input.priority };
+    }
+
+    // Note: Status updates require POST /transitions, not supported in simple update yet.
+
+    const res = await fetch(`https://${this.domain}/rest/api/3/issue/${input.id}`, {
+      method: 'PUT',
+      headers: this.getHeaders(),
+      body: JSON.stringify({ fields }),
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(`Failed to update Jira task: ${err}`);
+    }
+
+    // Return updated task
+    const task = await this.getTaskById(input.id);
+    if (!task) throw new Error('Task not found after update');
+    return task;
   }
 
   async deleteTask(id: string): Promise<boolean> {
@@ -194,8 +230,34 @@ export class JiraProvider implements ProjectProvider {
     return res.ok;
   }
 
-  async addComment(_taskId: string, _content: string): Promise<Task> {
-    // Renamed taskId, content
-    throw new Error('Not implemented');
+  async addComment(taskId: string, content: string): Promise<Task> {
+    await this.init();
+    const body = {
+      body: {
+        type: 'doc',
+        version: 1,
+        content: [
+          {
+            type: 'paragraph',
+            content: [{ type: 'text', text: content }],
+          },
+        ],
+      },
+    };
+
+    const res = await fetch(`https://${this.domain}/rest/api/3/issue/${taskId}/comment`, {
+      method: 'POST',
+      headers: this.getHeaders(),
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(`Failed to add comment to Jira task: ${err}`);
+    }
+
+    const task = await this.getTaskById(taskId);
+    if (!task) throw new Error('Task not found after adding comment');
+    return task;
   }
 }
