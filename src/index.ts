@@ -140,6 +140,10 @@ registerManagePairing(server);
 import { registerVisualizationTools } from './tools/visualization.js';
 registerVisualizationTools(server);
 
+// Code Scanner (Issue #38)
+import { registerScanTodos } from './tools/scanTodos.js';
+registerScanTodos(server);
+
 // Enterprise Features
 registerManageReleases(server);
 registerLogWork(server);
