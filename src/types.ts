@@ -267,3 +267,39 @@ export interface PdcaCycle {
   createdAt: string;
   completedAt?: string;
 }
+
+// PRINCE2 methodology types
+export interface ProjectBrief {
+  background: string; // Project background and context
+  objectives: string[]; // Project objectives
+  deliverables: string[]; // Expected deliverables
+  scope?: string; // Project scope
+  constraints?: string[]; // Project constraints
+  assumptions?: string[]; // Project assumptions
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface BusinessCase {
+  executiveSummary: string;
+  reasons: string[]; // Reasons for the project
+  benefits: string[]; // Expected benefits
+  costs: number; // Estimated costs
+  timescale: string; // Project timescale
+  risks?: string[]; // Major risks
+  options?: string[]; // Options considered
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface Prince2Organization {
+  executiveBoardMember: string; // Executive (ultimate decision maker)
+  projectManager: string; // Project Manager
+  teamManager: string; // Team Manager
+  seniorUser?: string; // Senior User
+  seniorSupplier?: string; // Senior Supplier
+  projectAssurance?: string; // Project Assurance role
+  changeAuthority?: string; // Change Authority
+  createdAt: string;
+  updatedAt?: string;
+}
