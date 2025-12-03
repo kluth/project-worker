@@ -124,6 +124,10 @@ registerSummarizeMeeting(server);
 import { registerPersonalProductivity } from './tools/personalProductivity.js';
 registerPersonalProductivity(server);
 
+// OKR Management Tools (Issue #19)
+import { registerManageOKRs } from './tools/manageOKRs.js';
+registerManageOKRs(server);
+
 // Enterprise Features
 registerManageReleases(server);
 registerLogWork(server);

@@ -34,6 +34,27 @@ export type TaskType =
   | 'change'
   | string;
 
+export interface KeyResult {
+  id: string;
+  objectiveId: string;
+  title: string;
+  target: number;
+  current: number;
+  unit: string;
+  status: 'on-track' | 'at-risk' | 'behind' | 'completed';
+}
+
+export interface Objective {
+  id: string;
+  title: string;
+  description?: string;
+  level: 'company' | 'team' | 'individual';
+  owner?: string;
+  status: 'active' | 'draft' | 'closed';
+  createdAt: string;
+  keyResults?: KeyResult[];
+}
+
 export interface Comment {
   id: string;
   author: string;

@@ -12,6 +12,8 @@ import type {
   Release,
   PomodoroSession,
   PersonalTodo,
+  Objective,
+  KeyResult,
 } from './types.js';
 
 const DB_DIR = path.join(os.homedir(), '.gemini-project-worker');
@@ -27,6 +29,8 @@ interface DatabaseSchema {
   discussions: Discussion[];
   pomodoroSessions: PomodoroSession[];
   personalTodos: PersonalTodo[];
+  objectives: Objective[];
+  keyResults: KeyResult[];
   lastUpdated: string;
 }
 
@@ -72,6 +76,26 @@ interface PersonalTodoRow {
   isCompleted: number; // 0 or 1
   createdAt: string;
   completedAt: string | null;
+}
+
+interface ObjectiveRow {
+  id: string;
+  title: string;
+  description: string | null;
+  level: string;
+  owner: string | null;
+  status: string;
+  createdAt: string;
+}
+
+interface KeyResultRow {
+  id: string;
+  objectiveId: string;
+  title: string;
+  target: number;
+  current: number;
+  unit: string;
+  status: string;
 }
 
 // Define a type for the raw row data from SQLite for sprints
@@ -230,6 +254,26 @@ class SQLiteDatabase {
         isCompleted INTEGER,
         createdAt TEXT,
         completedAt TEXT
+      );
+
+      CREATE TABLE IF NOT EXISTS objectives (
+        id TEXT PRIMARY KEY,
+        title TEXT,
+        description TEXT,
+        level TEXT,
+        owner TEXT,
+        status TEXT,
+        createdAt TEXT
+      );
+
+      CREATE TABLE IF NOT EXISTS key_results (
+        id TEXT PRIMARY KEY,
+        objectiveId TEXT,
+        title TEXT,
+        target REAL,
+        current REAL,
+        unit TEXT,
+        status TEXT
       );
     `);
 
@@ -654,6 +698,95 @@ class SQLiteDatabase {
 
   async deletePersonalTodo(id: string): Promise<void> {
     this.db.prepare('DELETE FROM personal_todos WHERE id = ?').run(id);
+  }
+
+  // --- OKRs ---
+
+  async saveObjective(objective: Objective): Promise<void> {
+    const exists = this.db.prepare('SELECT id FROM objectives WHERE id = ?').get(objective.id);
+    if (exists) {
+      this.db
+        .prepare(
+          'UPDATE objectives SET title = @title, description = @description, level = @level, owner = @owner, status = @status WHERE id = @id',
+        )
+        .run(objective);
+    } else {
+      this.db
+        .prepare(
+          'INSERT INTO objectives (id, title, description, level, owner, status, createdAt) VALUES (@id, @title, @description, @level, @owner, @status, @createdAt)',
+        )
+        .run(objective);
+    }
+  }
+
+  async getObjectives(): Promise<Objective[]> {
+    const rows = this.db.prepare('SELECT * FROM objectives').all() as ObjectiveRow[];
+    const keyResults = this.db.prepare('SELECT * FROM key_results').all() as KeyResultRow[];
+
+    return rows.map((row) => {
+      const krs = keyResults
+        .filter((k) => k.objectiveId === row.id)
+        .map((k) => ({
+          ...k,
+          status: k.status as KeyResult['status'],
+        }));
+      return {
+        ...row,
+        description: row.description || undefined,
+        owner: row.owner || undefined,
+        level: row.level as Objective['level'],
+        status: row.status as Objective['status'],
+        keyResults: krs,
+      };
+    });
+  }
+
+  async getObjectiveById(id: string): Promise<Objective | undefined> {
+    const row = this.db.prepare('SELECT * FROM objectives WHERE id = ?').get(id) as
+      | ObjectiveRow
+      | undefined;
+    if (!row) return undefined;
+
+    const keyResults = this.db
+      .prepare('SELECT * FROM key_results WHERE objectiveId = ?')
+      .all(id) as KeyResultRow[];
+
+    return {
+      ...row,
+      description: row.description || undefined,
+      owner: row.owner || undefined,
+      level: row.level as Objective['level'],
+      status: row.status as Objective['status'],
+      keyResults: keyResults.map((k) => ({
+        ...k,
+        status: k.status as KeyResult['status'],
+      })),
+    };
+  }
+
+  async saveKeyResult(kr: KeyResult): Promise<void> {
+    const exists = this.db.prepare('SELECT id FROM key_results WHERE id = ?').get(kr.id);
+    if (exists) {
+      this.db
+        .prepare(
+          'UPDATE key_results SET title = @title, target = @target, current = @current, unit = @unit, status = @status WHERE id = @id',
+        )
+        .run(kr);
+    } else {
+      this.db
+        .prepare(
+          'INSERT INTO key_results (id, objectiveId, title, target, current, unit, status) VALUES (@id, @objectiveId, @title, @target, @current, @unit, @status)',
+        )
+        .run(kr);
+    }
+  }
+
+  async getKeyResultById(id: string): Promise<KeyResult | undefined> {
+    const row = this.db.prepare('SELECT * FROM key_results WHERE id = ?').get(id) as
+      | KeyResultRow
+      | undefined;
+    if (!row) return undefined;
+    return { ...row, status: row.status as KeyResult['status'] };
   }
 }
 
