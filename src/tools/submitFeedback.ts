@@ -17,10 +17,7 @@ export function registerSubmitFeedback(server: McpServer): void {
           .describe('Type of feedback (positive, negative, or suggestion)'),
         content: z.string().describe('Feedback content'),
         author: z.string().optional().describe('Name of the person submitting feedback'),
-        anonymous: z
-          .boolean()
-          .optional()
-          .describe('Submit feedback anonymously (default: false)'),
+        anonymous: z.boolean().optional().describe('Submit feedback anonymously (default: false)'),
       }).shape,
     },
     async ({ retroId, type, content, author, anonymous }) => {

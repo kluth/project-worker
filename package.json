@@ -12,7 +12,7 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --coverage",
-    "prepare": "npm run build",
+    "prepare": "husky",
     "clean": "rm -rf dist",
     "lint": "eslint . --ext .ts,.js",
     "format": "prettier --write ."
@@ -26,6 +26,7 @@
     "eslint": "^8.50.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.0",
+    "husky": "^9.1.7",
     "prettier": "^3.0.0",
     "typescript": "~5.4.5",
     "vitest": "^4.0.14"

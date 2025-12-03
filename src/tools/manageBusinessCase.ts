@@ -13,10 +13,7 @@ export function registerManageBusinessCase(server: McpServer): void {
         action: z
           .enum(['create', 'update', 'get'])
           .describe('Action: create new, update existing, or get current business case'),
-        executiveSummary: z
-          .string()
-          .optional()
-          .describe('Executive summary of the business case'),
+        executiveSummary: z.string().optional().describe('Executive summary of the business case'),
         reasons: z.array(z.string()).optional().describe('Reasons for undertaking the project'),
         benefits: z.array(z.string()).optional().describe('Expected benefits'),
         costs: z.number().optional().describe('Estimated costs'),
@@ -25,16 +22,7 @@ export function registerManageBusinessCase(server: McpServer): void {
         options: z.array(z.string()).optional().describe('Options considered'),
       }).shape,
     },
-    async ({
-      action,
-      executiveSummary,
-      reasons,
-      benefits,
-      costs,
-      timescale,
-      risks,
-      options,
-    }) => {
+    async ({ action, executiveSummary, reasons, benefits, costs, timescale, risks, options }) => {
       const config = await configManager.get();
 
       // Validate PRINCE2 methodology is active

@@ -1,0 +1,33 @@
+#!/bin/sh
+echo "🔍 Running pre-commit checks..."
+
+# Run ESLint with auto-fix
+echo ""
+echo "🔧 Running ESLint with auto-fix..."
+npm run lint -- --fix
+
+LINT_EXIT_CODE=$?
+
+if [ $LINT_EXIT_CODE -ne 0 ]; then
+  echo "❌ Lint errors found that could not be auto-fixed."
+  echo "Please fix the errors manually and try again."
+  exit 1
+fi
+
+# Re-add fixed files
+git add -u
+
+# Run type checking
+echo ""
+echo "🔍 Running type check..."
+npm run typecheck
+
+TYPE_EXIT_CODE=$?
+
+if [ $TYPE_EXIT_CODE -ne 0 ]; then
+  echo "❌ Type check failed. Please fix type errors before committing."
+  exit 1
+fi
+
+echo "✅ All pre-commit checks passed!"
+exit 0

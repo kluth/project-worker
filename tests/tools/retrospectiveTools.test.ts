@@ -174,7 +174,7 @@ describe('Retrospective & Feedback Tools', () => {
       const result = await handler({
         retroId: 'retro-123',
         type: 'suggestion',
-        content: 'Let\'s try pair programming next sprint',
+        content: "Let's try pair programming next sprint",
         author: 'Charlie',
       });
 
