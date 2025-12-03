@@ -80,6 +80,14 @@ registerStartSprint(server);
 registerEndSprint(server);
 registerGetSprintDetails(server);
 
+// Waterfall Phase Management (Issue #11)
+import { registerDefinePhase } from './tools/definePhase.js';
+import { registerCompletePhase } from './tools/completePhase.js';
+import { registerGetPhaseDetails } from './tools/getPhaseDetails.js';
+registerDefinePhase(server);
+registerCompletePhase(server);
+registerGetPhaseDetails(server);
+
 // Enterprise Features
 registerManageReleases(server);
 registerLogWork(server);
