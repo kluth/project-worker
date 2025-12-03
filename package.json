@@ -1,6 +1,6 @@
 {
   "name": "project-worker",
-  "version": "1.0.0",
+  "version": "5.3.0",
   "description": "Gemini CLI extension that provides a lightweight MCP server to integrate with any popular project management tool (Jira, Trello, Asana, GitHub Projects, Azure Boards, etc).",
   "type": "module",
   "main": "dist/index.js",
