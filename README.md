@@ -1,58 +1,61 @@
-# ✨ Gemini Project Worker: Your Universal Project Gateway ✨
+# ✨ Gemini Project Worker
 
-Welcome to the **Gemini Project Worker**, a super powerful and autonomously working Gemini CLI extension designed to revolutionize your project management experience! This project serves as a comprehensive example of an MCP (Model Context Protocol) server, showcasing a lightweight TypeScript implementation that seamlessly integrates with a multitude of project management tools.
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?logo=typescript&logoColor=white)](https://typescriptlang.org)
+[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
+[![Tests](https://img.shields.io/badge/TDD-Mandatory-blueviolet)](https://github.com/kluth/project-worker)
 
-## 📚 Documentation
+> **An autonomous, AI-powered project gateway that bridges Gemini AI agents with your development workflow.**  
+> Worker processes, orchestrates, and reports — all through natural language intent.
 
-*   **[🚀 Getting Started Guide](project-worker.wiki/GETTING_STARTED.md)**: The step-by-step tutorial to get you up and running in minutes.
-*   **[🛠️ Tool Reference](project-worker.wiki/TOOLS.md)**: A granular, comprehensive guide to every single tool and command available.
-*   **[🔌 Provider Setup](project-worker.wiki/providers/index.md)**: Detailed configuration instructions for Jira, GitHub, Trello, Asana, Monday.com, and Azure DevOps.
-*   **[❓ Troubleshooting](project-worker.wiki/TROUBLESHOOTING.md)**: Common issues and how to solve them.
-*   **[🤝 Contributing](project-worker.wiki/CONTRIBUTING.md)**: How to help build the future of Project Worker.
+## 🏗️ Architecture
 
-## 🌟 Core Features
-
-### 🔗 Universal Provider Model
-We break down the walls between your favorite project management tools:
-*   **Local Provider**: Offline-first task management.
-*   **GitHub Issues**: For code-centric workflows.
-*   **Jira**: Enterprise-grade agile support.
-*   **Trello, Asana, Monday.com, Azure DevOps**: We support them all!
-
-### 🧠 Intelligent Workflows (New!)
-*   **Automated Standups**: Generate daily reports with `generate_standup`.
-*   **Code Scanning**: Automatically find and track TODOs in your code with `scan_todos`.
-*   **Smart Sprints**: Manage agile cycles directly from the CLI.
-
-### ⚙️ Developer Enhancements
-*   **Git Integration**: Create branches from tasks automatically.
-*   **Wiki & Knowledge**: Built-in documentation system.
-*   **Time Tracking**: Log work seamlessly.
+```
+project-worker/
+├── src/               # TypeScript source code
+│   └── *.ts           # Worker modules, gateway handlers, AI integration
+├── tests/             # Test suite (TDD mandatory)
+├── package.json       # Dependencies & scripts
+└── tsconfig.json      # TypeScript configuration
+```
 
 ## 🚀 Quick Start
 
-1.  **Install**:
-    ```bash
-    npm install
-    npm run build
-    ```
-2.  **Configure GitHub** (Example):
-    ```bash
-    manage_connections action=configure provider=github credentials={"token":"YOUR_TOKEN"} settings={"repo":"owner/repo"}
-    ```
-3.  **Activate**:
-    ```bash
-    manage_connections action=set_active provider=github
-    ```
-4.  **Create a Task**:
-    > "Create a task to fix the login bug."
+```bash
+# Install dependencies
+npm install
 
-*See [Getting Started](project-worker.wiki/GETTING_STARTED.md) for the full guide.*
+# Build
+npm run build
+
+# Run tests
+npm test
+
+# Start worker
+npm start
+```
+
+## 🧪 Testing
+
+This project follows **eTDD (Enforced Test-Driven Development)** — every module has a corresponding test file with semantic assertions. No vanity patterns (`assert(true)`) allowed.
+
+```bash
+# Run all tests
+npm test
+
+# Run with coverage
+npm run test:coverage
+
+# Watch mode
+npm run test:watch
+```
+
+## 🔧 Configuration
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `GEMINI_API_KEY` | Gemini AI API key | — |
+| `WORKER_MODE` | Worker execution mode | `gateway` |
 
 ## 📄 License
 
-This project is open-sourced under the MIT License. See the [LICENSE](LICENSE) file for more details.
-
----
-
-_Empower your workflow. Unify your projects. Experience the Gemini Project Worker!_ ✨
+MIT
