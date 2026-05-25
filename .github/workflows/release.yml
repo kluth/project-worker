@@ -42,7 +42,7 @@ jobs:
               "main"
             ]
           extra_plugins: |
-            - "@semantic-release/changelog"
-            - "@semantic-release/git"
-            - "@semantic-release/github"
-            - "@semantic-release/npm"
+            @semantic-release/changelog
+            @semantic-release/git
+            @semantic-release/github
+            @semantic-release/npm
