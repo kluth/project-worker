@@ -22,14 +22,14 @@
     "@types/node": "^20.11.25",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
-    "@vitest/coverage-v8": "^4.0.14",
+    "@vitest/coverage-v8": "^4.1.8",
     "eslint": "^8.50.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.0",
     "husky": "^9.1.7",
     "prettier": "^3.0.0",
     "typescript": "~5.4.5",
-    "vitest": "^4.0.14"
+    "vitest": "^4.1.8"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.26.0",
